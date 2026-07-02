@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Institutional Alpha</title>
+    <title>Signal King Institutional Alpha Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,24 +12,21 @@
         
         .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 24px; padding: 20px 15px 95px 15px; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; height: calc(100vh - 24px); z-index: 10; }
         
-        /* 🎯 DYNAMIC SIGNAL CARD STATES */
         .signal-card { background-color: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 12px; transition: all 0.4s ease; border: 2px solid transparent; }
         
-        /* State Modifications */
+        /* Dynamic Card Status Styles */
         .card-entry-triggered { border-color: #ffb300; background-color: #fffde7; box-shadow: 0 0 15px rgba(255,179,0,0.2); }
         .card-target-hit { border-color: #00c853; background-color: #f1fbf5; box-shadow: 0 0 15px rgba(0,200,83,0.25); }
         .card-sl-hit { border-color: #ff3d00; background-color: #fdf2f2; }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; }
         .coin-title { font-size: 18px; font-weight: 800; color: #111111; display: flex; align-items: center; gap: 8px; }
-        .coin-badge { background-color: #e8f5e9; color: #00875A; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
         
         .strategy-badge { font-size: 11px; font-weight: 900; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .strong-buy { background-color: #e8f5e9; color: #00c853; border: 1px solid #00c853; }
         .strong-sell { background-color: #ffebee; color: #ff3d00; border: 1px solid #ff3d00; }
         .neutral { background-color: #f5f5f5; color: #757575; border: 1px solid #e0e0e0; }
         
-        /* Status Alerts Alert */
         .alert-status-badge { background-color: #1e293b; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .badge-entry-hit { background-color: #ffb300; color: #000; }
         .badge-target-hit { background-color: #00c853; color: #fff; }
@@ -44,12 +41,11 @@
 
         .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; }
         .level-box { padding: 8px 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
-        .box-entry { background-color: #00c853; transition: all 0.3s; }
-        .box-target { background-color: #2962ff; transition: all 0.3s; }
-        .box-stop { background-color: #ff3d00; transition: all 0.3s; }
+        .box-entry { background-color: #00c853; }
+        .box-target { background-color: #2962ff; }
+        .box-stop { background-color: #ff3d00; }
         .box-algo { background-color: #1e293b; color: #f8fafc; }
         
-        /* Sub Level Hits Highlight */
         .level-hit-highlight { animation: pulseHighlight 1.5s infinite alternate; box-shadow: 0 0 10px currentColor; }
         @keyframes pulseHighlight { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.02); } }
 
@@ -65,11 +61,10 @@
 <body>
 
     <div class="main-content">
-        <!-- 🪙 BTC/USDT CARD -->
         <div class="signal-card" id="card-BTC">
             <div class="card-header">
                 <div class="coin-title">BTC/USDT <span class="strategy-badge neutral" id="signal-badge-BTC">Scanning...</span></div>
-                <div class="alert-status-badge" id="alert-badge-BTC">STANDBY</div>
+                <div class="alert-status-badge" id="alert-badge-BTC">MONITORING</div>
             </div>
             <div class="price-container">
                 <div class="price-label">Live Quantum Feed</div>
@@ -82,16 +77,15 @@
                 <div class="level-box box-target" id="box-t2-BTC" onclick="copyValue('BTC_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-BTC">--</span></div>
                 <div class="level-box box-stop" id="box-sl-BTC" onclick="copyValue('BTC_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-BTC">--</span></div>
                 <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-BTC">94.5%</span></div>
-                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">System Status</span><span class="level-value" id="status-text-BTC">Monitoring</span></div>
+                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">Trade Engine</span><span class="level-value" id="status-text-BTC">Ready</span></div>
                 <div class="box-info-bar" id="info-BTC"><i class="fas fa-sync-alt fa-spin"></i> Initializing Tracker...</div>
             </div>
         </div>
 
-        <!-- 🪙 ETH/USDT CARD -->
         <div class="signal-card" id="card-ETH">
             <div class="card-header">
                 <div class="coin-title">ETH/USDT <span class="strategy-badge neutral" id="signal-badge-ETH">Scanning...</span></div>
-                <div class="alert-status-badge" id="alert-badge-ETH">STANDBY</div>
+                <div class="alert-status-badge" id="alert-badge-ETH">MONITORING</div>
             </div>
             <div class="price-container">
                 <div class="price-label">Live Quantum Feed</div>
@@ -104,7 +98,7 @@
                 <div class="level-box box-target" id="box-t2-ETH" onclick="copyValue('ETH_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-ETH">--</span></div>
                 <div class="level-box box-stop" id="box-sl-ETH" onclick="copyValue('ETH_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-ETH">--</span></div>
                 <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-ETH">91.8%</span></div>
-                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">System Status</span><span class="level-value" id="status-text-ETH">Monitoring</span></div>
+                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">Trade Engine</span><span class="level-value" id="status-text-ETH">Ready</span></div>
                 <div class="box-info-bar" id="info-ETH"><i class="fas fa-sync-alt fa-spin"></i> Initializing Tracker...</div>
             </div>
         </div>
@@ -123,28 +117,24 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); tg.ready();
 
-        // Audio notification setup using Web Audio API (No external file needed)
         function playAlertSound(type) {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
+                osc.connect(gain); gain.connect(ctx.destination);
 
                 if (type === 'target') {
-                    // Success Melodic Double Beep
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
                     gain.gain.setValueAtTime(0.15, ctx.currentTime);
                     osc.start(); osc.stop(ctx.currentTime + 0.3);
                 } else if (type === 'entry') {
-                    // Entry Alert Chord
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime);
                     gain.gain.setValueAtTime(0.15, ctx.currentTime);
                     osc.start(); osc.stop(ctx.currentTime + 0.2);
                 }
-            } catch(e) { console.log("Audio play blocked"); }
+            } catch(e) { console.log("Audio playing blocked"); }
         }
 
         const coinData = {
@@ -167,7 +157,7 @@
             config.history.push(price);
             if (config.history.length > 30) config.history.shift();
 
-            // Calculate basic EMA crossovers
+            // Calculate basic technical EMAs
             if (config.history.length === 1) {
                 config.ema9 = price; config.ema21 = price;
             } else {
@@ -180,36 +170,61 @@
             changeEl.innerText = (percentChange >= 0 ? '+' : '') + percentChange.toFixed(2) + '%';
             changeEl.className = `price-change ${percentChange >= 0 ? 'change-up' : 'change-down'}`;
 
-            // Strategy conditions trigger
+            // 🛑 CRITICAL LIFECYCLE CHECK: If entry is already hit and trade is active, FREEZE new calls!
+            if (config.currentTrackState === 'active_in_trade') {
+                monitorActiveTrade(coin, price);
+                return; // Completely stop executing new signal logic
+            }
+
+            // Phase 1: Waiting for Entry Trigger (Values already set but not yet touched by market)
+            if (config.currentTrackState === 'monitoring_entry') {
+                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-bullseye" style="color: #ffb300;"></i> Entry set at $${config.entryVal.toFixed(config.decimals)}. Awaiting Market Hit...`;
+                
+                const isEntryTriggered = config.direction === 'LONG' ? (price <= config.entryVal) : (price >= config.entryVal);
+                if (isEntryTriggered) {
+                    config.currentTrackState = 'active_in_trade'; // LOCK ENGAGED
+                    
+                    // UI Transformations
+                    document.getElementById(`card-${coin}`).className = "signal-card card-entry-triggered";
+                    document.getElementById(`alert-badge-${coin}`).innerText = "ENTRY HIT";
+                    document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge badge-entry-hit";
+                    document.getElementById(`status-text-${coin}`).innerText = "LOCKED 🔒";
+                    document.getElementById(`box-entry-${coin}`).classList.add('level-hit-highlight');
+                    
+                    playAlertSound('entry');
+                    if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                }
+                return;
+            }
+
+            // Phase 0: Standby & Scanning Mode (No active trade setup)
             let signalText = 'NEUTRAL';
             let badgeClass = 'strategy-badge neutral';
             const bTrendUp = config.ema9 > config.ema21;
 
-            if (bTrendUp && percentChange > 0.2) {
+            if (bTrendUp && percentChange > 0.15) {
                 signalText = 'STRONG BUY'; badgeClass = 'strategy-badge strong-buy';
-            } else if (!bTrendUp && percentChange < -0.2) {
+            } else if (!bTrendUp && percentChange < -0.15) {
                 signalText = 'STRONG SELL'; badgeClass = 'strategy-badge strong-sell';
             }
 
-            // Generate levels once structure shifts
             if (config.lastSignal !== signalText && signalText !== 'NEUTRAL') {
                 config.lastSignal = signalText;
                 config.direction = signalText === 'STRONG BUY' ? 'LONG' : 'SHORT';
-                
-                // Reset tracker lifecycle states
-                config.currentTrackState = 'monitoring_entry';
+                config.currentTrackState = 'monitoring_entry'; // Shift lifecycle to pending entry
+
                 resetCardVisuals(coin);
 
                 if (config.direction === 'LONG') {
-                    config.entryVal = price * 0.9995; // Entry just slightly below current
-                    config.t1Val = price * 1.004;    // Quick Scalp Target
+                    config.entryVal = price * 0.9992; 
+                    config.t1Val = price * 1.005;    
                     config.t2Val = price * 1.012;    
-                    config.slVal = price * 0.994;    
+                    config.slVal = price * 0.993;    
                 } else {
-                    config.entryVal = price * 1.0005;
-                    config.t1Val = price * 0.996;    
+                    config.entryVal = price * 1.0008;
+                    config.t1Val = price * 0.995;    
                     config.t2Val = price * 0.988;    
-                    config.slVal = price * 1.006;    
+                    config.slVal = price * 1.007;    
                 }
 
                 document.getElementById(`entry-${coin}`).innerText = config.entryVal.toFixed(config.decimals);
@@ -219,64 +234,43 @@
                 
                 const badgeEl = document.getElementById(`signal-badge-${coin}`);
                 badgeEl.innerText = signalText; badgeEl.className = badgeClass;
-            }
-
-            // ⚡ LIVE TARGET EXECUTION ENGINE MATRIX
-            if (config.currentTrackState !== 'standby') {
-                const card = document.getElementById(`card-${coin}`);
-                const alertBadge = document.getElementById(`alert-badge-${coin}`);
-                const systemStatusText = document.getElementById(`status-text-${coin}`);
-                const infoBar = document.getElementById(`info-${coin}`);
-
-                // Phase 1: Monitoring Entry Trigger
-                if (config.currentTrackState === 'monitoring_entry') {
-                    infoBar.innerHTML = `<i class="fas fa-bullseye"></i> Waiting for asset to hit perfect entry...`;
-                    
-                    const isEntryTriggered = config.direction === 'LONG' ? (price <= config.entryVal) : (price >= config.entryVal);
-                    if (isEntryTriggered) {
-                        config.currentTrackState = 'active_in_trade';
-                        card.className = "signal-card card-entry-triggered";
-                        alertBadge.innerText = "ENTRY HIT";
-                        alertBadge.className = "alert-status-badge badge-entry-hit";
-                        systemStatusText.innerText = "In Trade ⚡";
-                        document.getElementById(`box-entry-${coin}`).classList.add('level-hit-highlight');
-                        
-                        playAlertSound('entry');
-                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-                    }
-                }
-                
-                // Phase 2: Monitoring Target / Stop Loss Hit
-                else if (config.currentTrackState === 'active_in_trade') {
-                    infoBar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Position Active. Tracking targets live...`;
-                    
-                    const isTargetHit = config.direction === 'LONG' ? (price >= config.t1Val) : (price <= config.t1Val);
-                    const isSLHit = config.direction === 'LONG' ? (price <= config.slVal) : (price >= config.slVal);
-
-                    if (isTargetHit) {
-                        config.currentTrackState = 'standby';
-                        card.className = "signal-card card-target-hit";
-                        alertBadge.innerText = "TARGET 1 HIT 🎉";
-                        alertBadge.className = "alert-status-badge badge-target-hit";
-                        systemStatusText.innerText = "Completed ✅";
-                        document.getElementById(`box-t1-${coin}`).classList.add('level-hit-highlight');
-                        
-                        playAlertSound('target');
-                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                    } 
-                    else if (isSLHit) {
-                        config.currentTrackState = 'standby';
-                        card.className = "signal-card card-sl-hit";
-                        alertBadge.innerText = "SL HIT ❌";
-                        alertBadge.className = "alert-status-badge badge-sl-hit";
-                        systemStatusText.innerText = "Stopped Out";
-                        document.getElementById(`box-sl-${coin}`).classList.add('level-hit-highlight');
-                        
-                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-                    }
-                }
             } else {
-                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-radar"></i> Scanning market orderblocks...`;
+                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-radiation fa-spin"></i> Quantum Matrix Engine scanning orderblocks...`;
+            }
+        }
+
+        // 🎯 LOCKED STATE LIFECYCLE MONITORING
+        function monitorActiveTrade(coin, price) {
+            const config = coinData[coin];
+            document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-lock" style="color: #ff3d00;"></i> Position Locked. Tracking Target & SL. New entry requests blocked.`;
+
+            const isTargetHit = config.direction === 'LONG' ? (price >= config.t1Val) : (price <= config.t1Val);
+            const isSLHit = config.direction === 'LONG' ? (price <= config.slVal) : (price >= config.slVal);
+
+            if (isTargetHit) {
+                config.currentTrackState = 'standby'; // UNLOCK NOW
+                config.lastSignal = ''; // Reset core filter triggers
+                
+                document.getElementById(`card-${coin}`).className = "signal-card card-target-hit";
+                document.getElementById(`alert-badge-${coin}`).innerText = "TARGET 1 HIT 🎉";
+                document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge badge-target-hit";
+                document.getElementById(`status-text-${coin}`).innerText = "Ready";
+                document.getElementById(`box-t1-${coin}`).classList.add('level-hit-highlight');
+                
+                playAlertSound('target');
+                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            } 
+            else if (isSLHit) {
+                config.currentTrackState = 'standby'; // UNLOCK NOW
+                config.lastSignal = '';
+                
+                document.getElementById(`card-${coin}`).className = "signal-card card-sl-hit";
+                document.getElementById(`alert-badge-${coin}`).innerText = "SL HIT ❌";
+                document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge badge-sl-hit";
+                document.getElementById(`status-text-${coin}`).innerText = "Ready";
+                document.getElementById(`box-sl-${coin}`).classList.add('level-hit-highlight');
+                
+                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         }
 
@@ -285,8 +279,9 @@
             document.getElementById(`box-t1-${coin}`).classList.remove('level-hit-highlight');
             document.getElementById(`box-sl-${coin}`).classList.remove('level-hit-highlight');
             document.getElementById(`card-${coin}`).className = "signal-card";
-            document.getElementById(`alert-badge-${coin}`).innerText = "MONITORING";
+            document.getElementById(`alert-badge-${coin}`).innerText = "AWAITING ENTRY";
             document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge";
+            document.getElementById(`status-text-${coin}`).innerText = "Tracking";
         }
 
         function copyValue(id) {
@@ -297,7 +292,7 @@
                 toast.innerText = `Copied Target: ${val}`;
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 2000);
-                if(tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
+                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
             }
         }
     </script>
