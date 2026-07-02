@@ -3,66 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Pro</title>
+    <title>Signal King Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        /* 🎯 GREEN BACKGROUND THEME */
-        body { background-color: #00875A; min-height: 100vh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+        body { background-color: #00875A; color: #333333; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
-        .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 20px; padding: 25px 15px 90px 15px; flex: 1; overflow-y: auto; }
+        /* 🎯 PERFECT HOME SCREEN FIT CONTAINER */
+        .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 24px; padding: 20px 15px 95px 15px; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; height: calc(100vh - 24px); z-index: 10; }
         
-        .signal-card { background-color: white; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .coin-name { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 10px; }
+        .signal-card { background-color: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 12px; }
         
-        /* 📈 LIVE PRICE BOX */
-        .live-price-box { background: #e8f5e9; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
-        .price-label { font-size: 12px; color: #666; }
-        .price-value { font-size: 24px; font-weight: bold; color: #00875A; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .coin-title { font-size: 18px; font-weight: 800; color: #111111; display: flex; align-items: center; gap: 8px; }
+        .coin-badge { background-color: #e8f5e9; color: #00875A; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 70px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #ddd; }
-        .nav-item { color: #00875A; font-weight: bold; font-size: 14px; text-align: center; }
+        /* STRATEGY SIGNAL BADGES */
+        .strategy-badge { font-size: 12px; font-weight: 900; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .strong-buy { background-color: #e8f5e9; color: #00c853; border: 1px solid #00c853; }
+        .strong-sell { background-color: #ffebee; color: #ff3d00; border: 1px solid #ff3d00; }
+        .neutral { background-color: #f5f5f5; color: #757575; border: 1px solid #e0e0e0; }
+
+        /* LIVE PRICE DISPLAY */
+        .price-container { background-color: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid #edf2f7; }
+        .price-label { font-size: 12px; color: #64748b; font-weight: 500; margin-bottom: 2px; }
+        .live-price { font-size: 26px; font-weight: 800; color: #00875A; transition: color 0.2s ease; }
+        .price-change { font-size: 13px; font-weight: 700; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px; }
+        .change-up { color: #00c853; }
+        .change-down { color: #ff3d00; }
+
+        /* DYNAMIC LEVEL BOXES */
+        .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; }
+        .level-box { padding: 8px 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+        .box-entry { background-color: #00c853; }
+        .box-target { background-color: #2962ff; }
+        .box-stop { background-color: #ff3d00; }
+        .box-rsi { background-color: #fff3e0; color: #ff9100; border: 1px solid #ffe0b2; grid-column: span 2; text-align: center; padding: 6px; }
+        .level-title { font-size: 10px; opacity: 0.85; text-transform: uppercase; font-weight: 600; }
+        .level-value { font-size: 13px; font-weight: 700; }
+
+        /* 🎯 ONE MIDDLE BUTTON NAVIGATION MATCHING 30968.JPG */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 75px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; }
+        .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00875A; font-size: 12px; font-weight: 700; gap: 4px; cursor: pointer; }
+        .nav-item-center i { font-size: 22px; }
+
+        #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; font-weight: 500; }
     </style>
 </head>
 <body>
 
-    <div class="main-content" id="main-container">
-        <!-- BTC LIVE PRICE CARD -->
-        <div class="signal-card">
-            <div class="coin-name">BTC/USDT Live</div>
-            <div class="live-price-box">
+    <div class="main-content">
+        <!-- 🪙 BTC/USDT CARD -->
+        <div class="signal-card" id="card-BTC">
+            <div class="card-header">
+                <div class="coin-title">BTC/USDT <span class="coin-badge">Live</span></div>
+                <div class="strategy-badge neutral" id="signal-badge-BTC">Analyzing...</div>
+            </div>
+            <div class="price-container">
                 <div class="price-label">Current Market Price</div>
-                <div class="price-value" id="btc-price">Loading...</div>
+                <div class="live-price" id="price-BTC">Loading...</div>
+                <div class="price-change" id="change-BTC">0.00%</div>
+            </div>
+            <div class="levels-grid">
+                <div class="level-box box-entry" onclick="copyValue('BTC_entry')"><span class="level-title">Target Entry</span><span class="level-value" id="entry-BTC">--</span></div>
+                <div class="level-box box-target" onclick="copyValue('BTC_target')"><span class="level-title">Take Profit</span><span class="level-value" id="target-BTC">--</span></div>
+                <div class="level-box box-stop" onclick="copyValue('BTC_stop')"><span class="level-title">Stop Loss</span><span class="level-value" id="stop-BTC">--</span></div>
+                <div class="level-box box-entry" style="background-color: #1e293b;"><span class="level-title">Signal Power</span><span class="level-value" id="power-BTC">--</span></div>
+                <div class="box-rsi" id="rsi-BTC">Strategy Momentum RSI: Calculating...</div>
             </div>
         </div>
-        
-        <!-- SIGNALS LIST CONTAINER -->
-        <div id="signals-list"></div>
-    </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item">
-            <i class="fas fa-chart-bar" style="font-size: 20px;"></i><br>
-            Signals
+        <!-- 🪙 ETH/USDT CARD -->
+        <div class="signal-card" id="card-ETH">
+            <div class="card-header">
+                <div class="coin-title">ETH/USDT <span class="coin-badge">Live</span></div>
+                <div class="strategy-badge neutral" id="signal-badge-ETH">Analyzing...</div>
+            </div>
+            <div class="price-container">
+                <div class="price-label">Current Market Price</div>
+                <div class="live-price" id="price-ETH">Loading...</div>
+                <div class="price-change" id="change-ETH">0.00%</div>
+            </div>
+            <div class="levels-grid">
+                <div class="level-box box-entry" onclick="copyValue('ETH_entry')"><span class="level-title">Target Entry</span><span class="level-value" id="entry-ETH">--</span></div>
+                <div class="level-box box-target" onclick="copyValue('ETH_target')"><span class="level-title">Take Profit</span><span class="level-value" id="target-ETH">--</span></div>
+                <div class="level-box box-stop" onclick="copyValue('ETH_stop')"><span class="level-title">Stop Loss</span><span class="level-value" id="stop-ETH">--</span></div>
+                <div class="level-box box-entry" style="background-color: #1e293b;"><span class="level-title">Signal Power</span><span class="level-value" id="power-ETH">--</span></div>
+                <div class="box-rsi" id="rsi-ETH">Strategy Momentum RSI: Calculating...</div>
+            </div>
+        </div>
+
+        <!-- 🪙 SOL/USDT CARD -->
+        <div class="signal-card" id="card-SOL">
+            <div class="card-header">
+                <div class="coin-title">SOL/USDT <span class="coin-badge">Live</span></div>
+                <div class="strategy-badge neutral" id="signal-badge-SOL">Analyzing...</div>
+            </div>
+            <div class="price-container">
+                <div class="price-label">Current Market Price</div>
+                <div class="live-price" id="price-SOL">Loading...</div>
+                <div class="price-change" id="change-SOL">0.00%</div>
+            </div>
+            <div class="levels-grid">
+                <div class="level-box box-entry" onclick="copyValue('SOL_entry')"><span class="level-title">Target Entry</span><span class="level-value" id="entry-SOL">--</span></div>
+                <div class="level-box box-target" onclick="copyValue('SOL_target')"><span class="level-title">Take Profit</span><span class="level-value" id="target-SOL">--</span></div>
+                <div class="level-box box-stop" onclick="copyValue('SOL_stop')"><span class="level-title">Stop Loss</span><span class="level-value" id="stop-SOL">--</span></div>
+                <div class="level-box box-entry" style="background-color: #1e293b;"><span class="level-title">Signal Power</span><span class="level-value" id="power-SOL">--</span></div>
+                <div class="box-rsi" id="rsi-SOL">Strategy Momentum RSI: Calculating...</div>
+            </div>
         </div>
     </div>
+
+    <!-- 🎯 30968.JPG SINGLE CENTER BUTTON (Signals) -->
+    <div class="bottom-nav">
+        <div class="nav-item-center">
+            <i class="fas fa-chart-bar"></i>
+            <span>Signals</span>
+        </div>
+    </div>
+    
+    <div id="toast">Value copied!</div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        
-        // 🚀 BTC LIVE PRICE SOCKET
-        const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
-        btcSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            document.getElementById('btc-price').innerText = '$' + parseFloat(data.c).toLocaleString();
+        tg.expand(); tg.ready();
+
+        // Coins state tracking configuration
+        const coinData = {
+            BTC: { decimals: 2, history: [], lastSignal: '' },
+            ETH: { decimals: 2, history: [], lastSignal: '' },
+            SOL: { decimals: 2, history: [], lastSignal: '' }
         };
 
-        // আপনি আগের মতোই Supabase বা অন্য Logic এখানে রাখতে পারেন।
-        console.log("App loaded with Green Theme & Live BTC Price");
+        // Connect directly to Binance WebSocket for full automated streaming setup
+        const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker/solusdt@ticker');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const rawSymbol = data.s; // e.g., "BTCUSDT"
+            const coinKey = rawSymbol.replace('USDT', '');
+            
+            if (coinData[coinKey]) {
+                processStrategySignal(coinKey, parseFloat(data.c), parseFloat(data.P));
+            }
+        };
+
+        // 🧠 CUSTOM REAL-TIME STRATEGY ENGINE (RSI & MOMENTUM APPROXIMATION)
+        function processStrategySignal(coin, price, percentChange) {
+            const config = coinData[coin];
+            config.history.push(price);
+            if (config.history.length > 15) config.history.shift(); // Keep moving window
+
+            // Calculate dynamic pseudo-RSI based on latest window momentum
+            let rsi = 50; 
+            if (config.history.length > 2) {
+                let gains = 0, losses = 0;
+                for (let i = 1; i < config.history.length; i++) {
+                    let diff = config.history[i] - config.history[i-1];
+                    if (diff > 0) gains += diff; else losses += Math.abs(diff);
+                }
+                let rs = gains / (losses || 1);
+                rsi = Math.round(100 - (100 / (1 + rs)));
+            }
+
+            // Fallback blend with general 24h trend percent change
+            rsi = Math.max(10, Math.min(90, rsi + Math.round(percentChange * 2)));
+
+            // DOM Updates for Live Market pricing
+            const priceEl = document.getElementById(`price-${coin}`);
+            priceEl.innerText = '$' + price.toFixed(config.decimals);
+            
+            const changeEl = document.getElementById(`change-${coin}`);
+            changeEl.innerText = (percentChange >= 0 ? '+' : '') + percentChange.toFixed(2) + '%';
+            changeEl.className = `price-change ${percentChange >= 0 ? 'change-up' : 'change-down'}`;
+
+            document.getElementById(`rsi-${coin}`).innerText = `⚡ Strategy Momentum RSI: ${rsi} (${rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Stable'})`;
+
+            // STRATEGY LOGIC TRIGGER BASED ON VOLATILITY MOMENTUM
+            let signalText = 'NEUTRAL';
+            let badgeClass = 'strategy-badge neutral';
+            let power = '0%';
+
+            if (rsi >= 62 || percentChange > 3.5) {
+                signalText = 'STRONG BUY';
+                badgeClass = 'strategy-badge strong-buy';
+                power = Math.min(99, 75 + (rsi - 60) * 2) + '%';
+            } else if (rsi <= 38 || percentChange < -3.5) {
+                signalText = 'STRONG SELL';
+                badgeClass = 'strategy-badge strong-sell';
+                power = Math.min(99, 75 + (40 - rsi) * 2) + '%';
+            } else {
+                power = '45%';
+            }
+
+            // Lock values once a strong signal state occurs to keep setup stable for trading
+            if (config.lastSignal !== signalText && signalText !== 'NEUTRAL') {
+                config.lastSignal = signalText;
+                
+                let entry, target, stop;
+                if (signalText === 'STRONG BUY') {
+                    entry = price * 0.998;
+                    target = price * 1.025;
+                    stop = price * 0.985;
+                } else {
+                    entry = price * 1.002;
+                    target = price * 0.975;
+                    stop = price * 1.015;
+                }
+
+                document.getElementById(`entry-${coin}`).innerText = entry.toFixed(config.decimals);
+                document.getElementById(`target-${coin}`).innerText = target.toFixed(config.decimals);
+                document.getElementById(`stop-${coin}`).innerText = stop.toFixed(config.decimals);
+                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+            } else if (config.lastSignal === '') {
+                // Initial baseline values assignment
+                document.getElementById(`entry-${coin}`).innerText = price.toFixed(config.decimals);
+                document.getElementById(`target-${coin}`).innerText = (price * 1.02).toFixed(config.decimals);
+                document.getElementById(`stop-${coin}`).innerText = (price * 0.99).toFixed(config.decimals);
+            }
+
+            // Update Signal metrics UI
+            const badgeEl = document.getElementById(`signal-badge-${coin}`);
+            badgeEl.innerText = signalText;
+            badgeEl.className = badgeClass;
+            document.getElementById(`power-${coin}`).innerText = power;
+        }
+
+        function copyValue(id) {
+            const val = document.getElementById(id.replace('_', '-')).innerText;
+            if (val !== '--' && val !== 'Loading...') {
+                navigator.clipboard.writeText(val);
+                const toast = document.getElementById('toast');
+                toast.innerText = `Copied Value: ${val}`;
+                toast.style.opacity = '1';
+                setTimeout(() => toast.style.opacity = '0', 2000);
+                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('light');
+            }
+        }
     </script>
 </body>
 </html>
