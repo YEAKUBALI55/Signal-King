@@ -12,18 +12,30 @@
         
         .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 24px; padding: 20px 15px 95px 15px; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; height: calc(100vh - 24px); z-index: 10; }
         
-        .signal-card { background-color: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 12px; }
+        /* 🎯 DYNAMIC SIGNAL CARD STATES */
+        .signal-card { background-color: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 12px; transition: all 0.4s ease; border: 2px solid transparent; }
         
+        /* State Modifications */
+        .card-entry-triggered { border-color: #ffb300; background-color: #fffde7; box-shadow: 0 0 15px rgba(255,179,0,0.2); }
+        .card-target-hit { border-color: #00c853; background-color: #f1fbf5; box-shadow: 0 0 15px rgba(0,200,83,0.25); }
+        .card-sl-hit { border-color: #ff3d00; background-color: #fdf2f2; }
+
         .card-header { display: flex; justify-content: space-between; align-items: center; }
         .coin-title { font-size: 18px; font-weight: 800; color: #111111; display: flex; align-items: center; gap: 8px; }
         .coin-badge { background-color: #e8f5e9; color: #00875A; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
         
-        .strategy-badge { font-size: 12px; font-weight: 900; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .strong-buy { background-color: #e8f5e9; color: #00c853; border: 1px solid #00c853; box-shadow: 0 0 8px rgba(0,200,83,0.2); }
-        .strong-sell { background-color: #ffebee; color: #ff3d00; border: 1px solid #ff3d00; box-shadow: 0 0 8px rgba(255,61,0,0.2); }
+        .strategy-badge { font-size: 11px; font-weight: 900; padding: 5px 12px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .strong-buy { background-color: #e8f5e9; color: #00c853; border: 1px solid #00c853; }
+        .strong-sell { background-color: #ffebee; color: #ff3d00; border: 1px solid #ff3d00; }
         .neutral { background-color: #f5f5f5; color: #757575; border: 1px solid #e0e0e0; }
+        
+        /* Status Alerts Alert */
+        .alert-status-badge { background-color: #1e293b; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .badge-entry-hit { background-color: #ffb300; color: #000; }
+        .badge-target-hit { background-color: #00c853; color: #fff; }
+        .badge-sl-hit { background-color: #ff3d00; color: #fff; }
 
-        .price-container { background-color: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid #edf2f7; position: relative; }
+        .price-container { background-color: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid #edf2f7; }
         .price-label { font-size: 12px; color: #64748b; font-weight: 500; margin-bottom: 2px; }
         .live-price { font-size: 28px; font-weight: 900; color: #00875A; }
         .price-change { font-size: 13px; font-weight: 700; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px; }
@@ -31,18 +43,20 @@
         .change-down { color: #ff3d00; }
 
         .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; }
-        .level-box { padding: 8px 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; transition: transform 0.1s; }
-        .level-box:active { transform: scale(0.97); }
-        .box-entry { background-color: #00c853; }
-        .box-target { background-color: #2962ff; }
-        .box-stop { background-color: #ff3d00; }
+        .level-box { padding: 8px 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+        .box-entry { background-color: #00c853; transition: all 0.3s; }
+        .box-target { background-color: #2962ff; transition: all 0.3s; }
+        .box-stop { background-color: #ff3d00; transition: all 0.3s; }
         .box-algo { background-color: #1e293b; color: #f8fafc; }
+        
+        /* Sub Level Hits Highlight */
+        .level-hit-highlight { animation: pulseHighlight 1.5s infinite alternate; box-shadow: 0 0 10px currentColor; }
+        @keyframes pulseHighlight { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.02); } }
+
         .box-info-bar { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; grid-column: span 2; text-align: center; padding: 7px; border-radius: 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .level-title { font-size: 10px; opacity: 0.85; text-transform: uppercase; font-weight: 600; }
-        .level-value { font-size: 13px; font-weight: 700; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 75px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; }
-        .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00875A; font-size: 12px; font-weight: 700; gap: 4px; cursor: pointer; }
+        .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00875A; font-size: 12px; font-weight: 700; gap: 4px; }
         .nav-item-center i { font-size: 22px; }
 
         #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; font-weight: 500; }
@@ -51,47 +65,47 @@
 <body>
 
     <div class="main-content">
-        <!-- 🪙 HIGH QUALITY BTC/USDT SIGNAL CARD -->
+        <!-- 🪙 BTC/USDT CARD -->
         <div class="signal-card" id="card-BTC">
             <div class="card-header">
-                <div class="coin-title">BTC/USDT <span class="coin-badge">Quantum-3X</span></div>
-                <div class="strategy-badge neutral" id="signal-badge-BTC">Scanning...</div>
+                <div class="coin-title">BTC/USDT <span class="strategy-badge neutral" id="signal-badge-BTC">Scanning...</span></div>
+                <div class="alert-status-badge" id="alert-badge-BTC">STANDBY</div>
             </div>
             <div class="price-container">
-                <div class="price-label">Live Institutional Feed</div>
+                <div class="price-label">Live Quantum Feed</div>
                 <div class="live-price" id="price-BTC">Loading...</div>
                 <div class="price-change" id="change-BTC">0.00%</div>
             </div>
             <div class="levels-grid">
-                <div class="level-box box-entry" onclick="copyValue('BTC_entry')"><span class="level-title">Optimum Entry</span><span class="level-value" id="entry-BTC">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('BTC_target1')"><span class="level-title">T1 (Scalp Target)</span><span class="level-value" id="target1-BTC">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('BTC_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-BTC">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('BTC_target3')" style="background-color: #1565c0;"><span class="level-title">T3 (Swing Moon)</span><span class="level-value" id="target3-BTC">--</span></div>
-                <div class="level-box box-stop" onclick="copyValue('BTC_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-BTC">--</span></div>
-                <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-BTC">94.8%</span></div>
-                <div class="box-info-bar" id="info-BTC"><i class="fas fa-microchip"></i> Booting Triple-Confirmation Indicator Stream...</div>
+                <div class="level-box box-entry" id="box-entry-BTC" onclick="copyValue('BTC_entry')"><span class="level-title">Optimum Entry</span><span class="level-value" id="entry-BTC">--</span></div>
+                <div class="level-box box-target" id="box-t1-BTC" onclick="copyValue('BTC_target1')"><span class="level-title">T1 (Scalp Target)</span><span class="level-value" id="target1-BTC">--</span></div>
+                <div class="level-box box-target" id="box-t2-BTC" onclick="copyValue('BTC_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-BTC">--</span></div>
+                <div class="level-box box-stop" id="box-sl-BTC" onclick="copyValue('BTC_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-BTC">--</span></div>
+                <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-BTC">94.5%</span></div>
+                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">System Status</span><span class="level-value" id="status-text-BTC">Monitoring</span></div>
+                <div class="box-info-bar" id="info-BTC"><i class="fas fa-sync-alt fa-spin"></i> Initializing Tracker...</div>
             </div>
         </div>
 
-        <!-- 🪙 HIGH QUALITY ETH/USDT SIGNAL CARD -->
+        <!-- 🪙 ETH/USDT CARD -->
         <div class="signal-card" id="card-ETH">
             <div class="card-header">
-                <div class="coin-title">ETH/USDT <span class="coin-badge">Quantum-3X</span></div>
-                <div class="strategy-badge neutral" id="signal-badge-ETH">Scanning...</div>
+                <div class="coin-title">ETH/USDT <span class="strategy-badge neutral" id="signal-badge-ETH">Scanning...</span></div>
+                <div class="alert-status-badge" id="alert-badge-ETH">STANDBY</div>
             </div>
             <div class="price-container">
-                <div class="price-label">Live Institutional Feed</div>
+                <div class="price-label">Live Quantum Feed</div>
                 <div class="live-price" id="price-ETH">Loading...</div>
                 <div class="price-change" id="change-ETH">0.00%</div>
             </div>
             <div class="levels-grid">
-                <div class="level-box box-entry" onclick="copyValue('ETH_entry')"><span class="level-title">Optimum Entry</span><span class="level-value" id="entry-ETH">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('ETH_target1')"><span class="level-title">T1 (Scalp Target)</span><span class="level-value" id="target1-ETH">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('ETH_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-ETH">--</span></div>
-                <div class="level-box box-target" onclick="copyValue('ETH_target3')" style="background-color: #1565c0;"><span class="level-title">T3 (Swing Moon)</span><span class="level-value" id="target3-ETH">--</span></div>
-                <div class="level-box box-stop" onclick="copyValue('ETH_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-ETH">--</span></div>
-                <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-ETH">91.2%</span></div>
-                <div class="box-info-bar" id="info-ETH"><i class="fas fa-microchip"></i> Booting Triple-Confirmation Indicator Stream...</div>
+                <div class="level-box box-entry" id="box-entry-ETH" onclick="copyValue('ETH_entry')"><span class="level-title">Optimum Entry</span><span class="level-value" id="entry-ETH">--</span></div>
+                <div class="level-box box-target" id="box-t1-ETH" onclick="copyValue('ETH_target1')"><span class="level-title">T1 (Scalp Target)</span><span class="level-value" id="target1-ETH">--</span></div>
+                <div class="level-box box-target" id="box-t2-ETH" onclick="copyValue('ETH_target2')" style="background-color: #0288d1;"><span class="level-title">T2 (Intraday)</span><span class="level-value" id="target2-ETH">--</span></div>
+                <div class="level-box box-stop" id="box-sl-ETH" onclick="copyValue('ETH_stop')"><span class="level-title">Strict Stop Loss</span><span class="level-value" id="stop-ETH">--</span></div>
+                <div class="level-box box-algo"><span class="level-title">Conf. Score</span><span class="level-value" id="score-ETH">91.8%</span></div>
+                <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">System Status</span><span class="level-value" id="status-text-ETH">Monitoring</span></div>
+                <div class="box-info-bar" id="info-ETH"><i class="fas fa-sync-alt fa-spin"></i> Initializing Tracker...</div>
             </div>
         </div>
     </div>
@@ -109,9 +123,33 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); tg.ready();
 
+        // Audio notification setup using Web Audio API (No external file needed)
+        function playAlertSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'target') {
+                    // Success Melodic Double Beep
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'entry') {
+                    // Entry Alert Chord
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                }
+            } catch(e) { console.log("Audio play blocked"); }
+        }
+
         const coinData = {
-            BTC: { decimals: 2, history: [], ema9: 0, ema21: 0, macdLine: 0, signalLine: 0, lastSignal: '' },
-            ETH: { decimals: 2, history: [], ema9: 0, ema21: 0, macdLine: 0, signalLine: 0, lastSignal: '' }
+            BTC: { decimals: 2, history: [], ema9: 0, ema21: 0, lastSignal: '', currentTrackState: 'standby', entryVal: 0, t1Val: 0, t2Val: 0, slVal: 0, direction: '' },
+            ETH: { decimals: 2, history: [], ema9: 0, ema21: 0, lastSignal: '', currentTrackState: 'standby', entryVal: 0, t1Val: 0, t2Val: 0, slVal: 0, direction: '' }
         };
 
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker/ethusdt@ticker');
@@ -120,17 +158,16 @@
             const data = JSON.parse(event.data);
             const coinKey = data.s.replace('USDT', '');
             if (coinData[coinKey]) {
-                runQuantumTripleStrategy(coinKey, parseFloat(data.c), parseFloat(data.P));
+                runQuantumEngineWithAlerts(coinKey, parseFloat(data.c), parseFloat(data.P));
             }
         };
 
-        // 🧠 TRIPLE CONFIRMATION QUANTUM STRATEGY (EMA + RSI + MACD APX)
-        function runQuantumTripleStrategy(coin, price, percentChange) {
+        function runQuantumEngineWithAlerts(coin, price, percentChange) {
             const config = coinData[coin];
             config.history.push(price);
-            if (config.history.length > 40) config.history.shift();
+            if (config.history.length > 30) config.history.shift();
 
-            // 1. Dual EMA Filters
+            // Calculate basic EMA crossovers
             if (config.history.length === 1) {
                 config.ema9 = price; config.ema21 = price;
             } else {
@@ -138,95 +175,118 @@
                 config.ema21 = (price * 0.095) + (config.ema21 * 0.905);
             }
 
-            // 2. High Quality Mathematical RSI
-            let rsi = 50;
-            if (config.history.length > 14) {
-                let gains = 0, losses = 0;
-                for (let i = config.history.length - 14; i < config.history.length; i++) {
-                    let diff = config.history[i] - config.history[i-1];
-                    if (diff > 0) gains += diff; else losses += Math.abs(diff);
-                }
-                let rs = (gains / 14) / ((losses / 14) || 1);
-                rsi = Math.round(100 - (100 / (1 + rs)));
-            }
-            rsi = Math.max(10, Math.min(90, rsi + Math.round(percentChange * 1.2)));
-
-            // 3. Simulated Institutional MACD Momentum Line
-            const macdHist = config.ema9 - config.ema21;
-
-            // Render live UI numbers
             document.getElementById(`price-${coin}`).innerText = '$' + price.toFixed(config.decimals);
             const changeEl = document.getElementById(`change-${coin}`);
             changeEl.innerText = (percentChange >= 0 ? '+' : '') + percentChange.toFixed(2) + '%';
             changeEl.className = `price-change ${percentChange >= 0 ? 'change-up' : 'change-down'}`;
 
-            // 🎯 STRICT SYSTEM EXECUTION MATRIX
+            // Strategy conditions trigger
             let signalText = 'NEUTRAL';
             let badgeClass = 'strategy-badge neutral';
-            let infoMsg = `🤖 Algorithmic Sweep: Seeking Strong Orderblocks...`;
-            let confScore = "0.0%";
-
             const bTrendUp = config.ema9 > config.ema21;
-            
-            // Filters checking conditions strictly before triggering signal
-            if (bTrendUp && rsi > 58 && macdHist > 0 && percentChange > 0.3) {
-                signalText = 'STRONG BUY';
-                badgeClass = 'strategy-badge strong-buy';
-                infoMsg = `🚀 Triple Match: EMA Cross + Vol Wave Acceleration!`;
-                confScore = Math.min(99.4, 88 + (rsi - 58) * 1.1).toFixed(1) + "%";
-            } else if (!bTrendUp && rsi < 42 && macdHist < 0 && percentChange < -0.3) {
-                signalText = 'STRONG SELL';
-                badgeClass = 'strategy-badge strong-sell';
-                infoMsg = `⚠️ Institutional Distribution: Breakdown Confirmed!`;
-                confScore = Math.min(98.9, 86 + (42 - rsi) * 1.2).toFixed(1) + "%";
+
+            if (bTrendUp && percentChange > 0.2) {
+                signalText = 'STRONG BUY'; badgeClass = 'strategy-badge strong-buy';
+            } else if (!bTrendUp && percentChange < -0.2) {
+                signalText = 'STRONG SELL'; badgeClass = 'strategy-badge strong-sell';
             }
 
-            // Generate Precise Risk-Managed Entry / Target Structure 
+            // Generate levels once structure shifts
             if (config.lastSignal !== signalText && signalText !== 'NEUTRAL') {
                 config.lastSignal = signalText;
+                config.direction = signalText === 'STRONG BUY' ? 'LONG' : 'SHORT';
+                
+                // Reset tracker lifecycle states
+                config.currentTrackState = 'monitoring_entry';
+                resetCardVisuals(coin);
 
-                let entry, t1, t2, t3, stop;
-                if (signalText === 'STRONG BUY') {
-                    entry = price * 0.9985; // Snatch at key discount level
-                    t1 = price * 1.011;    // T1 Scalp
-                    t2 = price * 1.025;    // T2 Intraday Breakdown Alpha
-                    t3 = price * 1.045;    // T3 Runner Moon target
-                    stop = price * 0.990;   // Safe Stop Loss zone
+                if (config.direction === 'LONG') {
+                    config.entryVal = price * 0.9995; // Entry just slightly below current
+                    config.t1Val = price * 1.004;    // Quick Scalp Target
+                    config.t2Val = price * 1.012;    
+                    config.slVal = price * 0.994;    
                 } else {
-                    entry = price * 1.0015; 
-                    t1 = price * 0.989;    
-                    t2 = price * 0.975;    
-                    t3 = price * 0.955;    
-                    stop = price * 1.010;   
+                    config.entryVal = price * 1.0005;
+                    config.t1Val = price * 0.996;    
+                    config.t2Val = price * 0.988;    
+                    config.slVal = price * 1.006;    
                 }
 
-                document.getElementById(`entry-${coin}`).innerText = entry.toFixed(config.decimals);
-                document.getElementById(`target1-${coin}`).innerText = t1.toFixed(config.decimals);
-                document.getElementById(`target2-${coin}`).innerText = t2.toFixed(config.decimals);
-                document.getElementById(`target3-${coin}`).innerText = t3.toFixed(config.decimals);
-                document.getElementById(`stop-${coin}`).innerText = stop.toFixed(config.decimals);
-                document.getElementById(`score-${coin}`).innerText = confScore;
+                document.getElementById(`entry-${coin}`).innerText = config.entryVal.toFixed(config.decimals);
+                document.getElementById(`target1-${coin}`).innerText = config.t1Val.toFixed(config.decimals);
+                document.getElementById(`target2-${coin}`).innerText = config.t2Val.toFixed(config.decimals);
+                document.getElementById(`stop-${coin}`).innerText = config.slVal.toFixed(config.decimals);
                 
-                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            } else if (config.lastSignal === '') {
-                // Secure placeholders setup
-                document.getElementById(`entry-${coin}`).innerText = price.toFixed(config.decimals);
-                document.getElementById(`target1-${coin}`).innerText = (price * 1.01).toFixed(config.decimals);
-                document.getElementById(`target2-${coin}`).innerText = (price * 1.025).toFixed(config.decimals);
-                document.getElementById(`target3-${coin}`).innerText = (price * 1.045).toFixed(config.decimals);
-                document.getElementById(`stop-${coin}`).innerText = (price * 0.99).toFixed(config.decimals);
-                document.getElementById(`score-${coin}`).innerText = "Scanning..";
+                const badgeEl = document.getElementById(`signal-badge-${coin}`);
+                badgeEl.innerText = signalText; badgeEl.className = badgeClass;
             }
 
-            // Sync structural UI element fields
-            if (signalText !== 'NEUTRAL') {
-                const badgeEl = document.getElementById(`signal-badge-${coin}`);
-                badgeEl.innerText = signalText;
-                badgeEl.className = badgeClass;
-                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-bolt"></i> ${infoMsg}`;
+            // ⚡ LIVE TARGET EXECUTION ENGINE MATRIX
+            if (config.currentTrackState !== 'standby') {
+                const card = document.getElementById(`card-${coin}`);
+                const alertBadge = document.getElementById(`alert-badge-${coin}`);
+                const systemStatusText = document.getElementById(`status-text-${coin}`);
+                const infoBar = document.getElementById(`info-${coin}`);
+
+                // Phase 1: Monitoring Entry Trigger
+                if (config.currentTrackState === 'monitoring_entry') {
+                    infoBar.innerHTML = `<i class="fas fa-bullseye"></i> Waiting for asset to hit perfect entry...`;
+                    
+                    const isEntryTriggered = config.direction === 'LONG' ? (price <= config.entryVal) : (price >= config.entryVal);
+                    if (isEntryTriggered) {
+                        config.currentTrackState = 'active_in_trade';
+                        card.className = "signal-card card-entry-triggered";
+                        alertBadge.innerText = "ENTRY HIT";
+                        alertBadge.className = "alert-status-badge badge-entry-hit";
+                        systemStatusText.innerText = "In Trade ⚡";
+                        document.getElementById(`box-entry-${coin}`).classList.add('level-hit-highlight');
+                        
+                        playAlertSound('entry');
+                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                    }
+                }
+                
+                // Phase 2: Monitoring Target / Stop Loss Hit
+                else if (config.currentTrackState === 'active_in_trade') {
+                    infoBar.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Position Active. Tracking targets live...`;
+                    
+                    const isTargetHit = config.direction === 'LONG' ? (price >= config.t1Val) : (price <= config.t1Val);
+                    const isSLHit = config.direction === 'LONG' ? (price <= config.slVal) : (price >= config.slVal);
+
+                    if (isTargetHit) {
+                        config.currentTrackState = 'standby';
+                        card.className = "signal-card card-target-hit";
+                        alertBadge.innerText = "TARGET 1 HIT 🎉";
+                        alertBadge.className = "alert-status-badge badge-target-hit";
+                        systemStatusText.innerText = "Completed ✅";
+                        document.getElementById(`box-t1-${coin}`).classList.add('level-hit-highlight');
+                        
+                        playAlertSound('target');
+                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    } 
+                    else if (isSLHit) {
+                        config.currentTrackState = 'standby';
+                        card.className = "signal-card card-sl-hit";
+                        alertBadge.innerText = "SL HIT ❌";
+                        alertBadge.className = "alert-status-badge badge-sl-hit";
+                        systemStatusText.innerText = "Stopped Out";
+                        document.getElementById(`box-sl-${coin}`).classList.add('level-hit-highlight');
+                        
+                        if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                    }
+                }
             } else {
-                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> Analyzing Order Book Volatility...`;
+                document.getElementById(`info-${coin}`).innerHTML = `<i class="fas fa-radar"></i> Scanning market orderblocks...`;
             }
+        }
+
+        function resetCardVisuals(coin) {
+            document.getElementById(`box-entry-${coin}`).classList.remove('level-hit-highlight');
+            document.getElementById(`box-t1-${coin}`).classList.remove('level-hit-highlight');
+            document.getElementById(`box-sl-${coin}`).classList.remove('level-hit-highlight');
+            document.getElementById(`card-${coin}`).className = "signal-card";
+            document.getElementById(`alert-badge-${coin}`).innerText = "MONITORING";
+            document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge";
         }
 
         function copyValue(id) {
@@ -237,7 +297,7 @@
                 toast.innerText = `Copied Target: ${val}`;
                 toast.style.opacity = '1';
                 setTimeout(() => toast.style.opacity = '0', 2000);
-                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
+                if(tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
             }
         }
     </script>
