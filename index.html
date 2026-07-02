@@ -3,171 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King</title>
+    <title>Signal King Live</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: #1948b4; color: #333333; display: flex; flex-direction: column; min-height: 100vh; }
+        body { background-color: #1948b4; color: #333333; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         
-        /* Blue Header Setup */
-        .top-header { padding: 15px 15px 5px 15px; color: white; }
-        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        /* Blue Header */
+        .top-header { padding: 15px 15px 5px 15px; color: white; position: fixed; top: 0; left: 0; right: 0; height: 110px; z-index: 100; }
+        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .header-main h1 { font-size: 24px; font-weight: bold; }
         .header-icons { display: flex; gap: 18px; font-size: 20px; }
         
-        /* Tabs Container */
+        /* Tabs */
         .tabs-container { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
         .tabs-container::-webkit-scrollbar { display: none; }
-        .tab { font-size: 16px; font-weight: bold; color: rgba(255, 255, 255, 0.7); padding-bottom: 8px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+        .tab { font-size: 16px; font-weight: bold; color: rgba(255, 255, 255, 0.7); padding-bottom: 8px; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
         .tab.active { color: white; border-bottom: 3px solid white; }
         
         /* Main Body Content */
-        .main-content { background-color: #f4f6fa; border-top-left-radius: 24px; border-top-right-radius: 24px; flex: 1; padding: 15px 15px 80px 15px; display: flex; flex-direction: column; gap: 15px; }
+        .main-content { background-color: #f4f6fa; border-top-left-radius: 24px; border-top-right-radius: 24px; margin-top: 100px; padding: 15px 15px 80px 15px; flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 10; overflow-y: auto; height: calc(100vh - 100px); }
         
-        /* Signal Card Design */
-        .signal-card { background-color: white; border-radius: 16px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        /* Signal Card */
+        .signal-card { background-color: white; border-radius: 16px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative;}
+        .signal-card:active { transform: scale(0.98); }
         .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .coin-info { display: flex; align-items: center; gap: 10px; }
-        .coin-icon { width: 40px; height: 40px; background-color: #e8efff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1948b4; font-weight: bold; font-size: 18px; }
+        .coin-icon { width: 40px; height: 40px; background-color: #e8efff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1948b4; font-weight: bold; font-size: 18px; text-transform: uppercase;}
         .coin-name-wrap { display: flex; align-items: center; gap: 6px; }
         .coin-name { font-size: 18px; font-weight: bold; color: #111; }
-        .target-badge { background-color: #2962ff; color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
-        .card-time { font-size: 12px; color: #888; }
+        .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; text-transform: uppercase; border: 1px solid;}
         
-        /* Badges Row */
-        .badges-row { display: flex; gap: 6px; margin-bottom: 12px; font-size: 12px; font-weight: bold; }
-        .badge-leverage { border: 1px solid #00c853; color: #00c853; padding: 3px 8px; border-radius: 4px; background-color: rgba(0, 200, 83, 0.03); }
-        .badge-entry { background-color: #00c853; color: white; padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
-        .badge-stop { background-color: #ff3d00; color: white; padding: 3px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        /* Status Color Classes */
+        .signal-active .status-badge { background-color: rgba(0, 200, 83, 0.1); color: #00c853; border-color: transparent; }
+        .signal-target .status-badge { background-color: #2962ff; color: white; border-color: transparent; }
+        .signal-stop .status-badge { background-color: #ff3d00; color: white; border-color: transparent; }
+        .signal-card .card-time { font-size: 12px; color: #888; }
         
-        /* Price Row Box */
+        /* Copy Badge Interaction */
+        .badges-row { display: flex; gap: 6px; margin-bottom: 12px; font-size: 12px; font-weight: bold; overflow-x: auto;}
+        .badge-leverage { border: 1px solid #00c853; color: #00c853; padding: 3px 8px; border-radius: 4px; background-color: rgba(0, 200, 83, 0.03); white-space: nowrap;}
+        .copy-badge { cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 4px; padding: 3px 8px; color: white; -webkit-tap-highlight-color: transparent;}
+        .copy-badge:active { opacity: 0.8;}
+        .badge-entry { background-color: #00c853;}
+        .badge-stop { background-color: #ff3d00;}
+        
+        /* Price Row */
         .price-box { background-color: #f0f3f8; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .price-label { font-size: 13px; color: #666; }
-        .price-value { font-size: 16px; font-weight: bold; color: #222; }
+        .live-price-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .price-value { font-size: 18px; font-weight: bold; color: #222; }
         .price-change { font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 2px; }
         .price-change.up { color: #00c853; }
         .price-change.down { color: #ff3d00; }
         
-        /* Card Actions Row */
+        /* Card Actions */
         .card-actions { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 10px; font-size: 14px; color: #1948b4; font-weight: 500; }
-        .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .action-btn:active { color: #111; }
         .action-btn.gray { color: #666; }
+        .action-btn.gray:active { color: #333;}
         
-        /* Bottom Navigation Bar */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 65px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e0e0e0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 11px; font-weight: 500; text-decoration: none; gap: 4px; width: 25%; height: 100%; cursor: pointer; }
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 65px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e0e0e0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 11px; font-weight: 500; text-decoration: none; gap: 4px; width: 25%; height: 100%; cursor: pointer; -webkit-tap-highlight-color: transparent;}
+        .nav-item:active { color: #555; }
         .nav-item i { font-size: 20px; }
         .nav-item.active { color: #1948b4; }
+        
+        /* Copy Notification Popup */
+        #copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; white-space: nowrap;}
     </style>
 </head>
 <body>
 
-    <!-- Top Blue Header Section -->
+    <!-- Top Header -->
     <div class="top-header">
         <div class="header-main">
-            <h1>Signals</h1>
+            <h1 id="page-title">Signals</h1>
             <div class="header-icons">
                 <i class="far fa-question-circle"></i>
                 <i class="far fa-bell"></i>
                 <i class="fas fa-cog"></i>
             </div>
         </div>
-        <!-- Tabs Menu -->
+        <!-- Tabs -->
         <div class="tabs-container">
-            <div class="tab active">Futures</div>
-            <div class="tab">Spots</div>
-            <div class="tab">Trades</div>
-            <div class="tab">Pins</div>
+            <div class="tab active" data-content="futures">Futures</div>
+            <div class="tab" data-content="spots">Spots</div>
+            <div class="tab" data-content="trades">Trades</div>
+            <div class="tab" data-content="pins">Pins</div>
         </div>
     </div>
 
-    <!-- Main Content App Body (Grey Background) -->
-    <div class="main-content">
-        
-        <!-- Signal Card 1: XLM -->
-        <div class="signal-card">
-            <div class="card-top">
-                <div class="coin-info">
-                    <div class="coin-icon" style="background-color: #e3f2fd; color: #1e88e5;"><i class="fas fa-rocket"></i></div>
-                    <div class="coin-name-wrap">
-                        <span class="coin-name">XLMUSDT</span>
-                        <span class="target-badge">Target 1 <i class="fas fa-check"></i></span>
-                    </div>
-                </div>
-                <div class="card-time">Jul 2, 7:04 PM</div>
-            </div>
-            <div class="badges-row">
-                <span class="badge-leverage">Long 5X</span>
-                <span class="badge-entry">Entry 0.20156 <i class="far fa-copy"></i></span>
-                <span class="badge-stop">Stop 0.19412 <i class="far fa-copy"></i></span>
-            </div>
-            <div class="price-box">
-                <span class="price-label">Current price</span>
-                <span class="price-value">0.197</span>
-                <span class="price-change down">-1.2 <i class="fas fa-arrow-down"></i></span>
-            </div>
-            <div class="card-actions">
-                <div class="action-btn"><i class="fas fa-chart-line"></i> Chart</div>
-                <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
-                <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
-            </div>
-        </div>
-
-        <!-- Signal Card 2: KNC -->
-        <div class="signal-card">
-            <div class="card-top">
-                <div class="coin-info">
-                    <div class="coin-icon" style="background-color: #e8f5e9; color: #43a047;"><i class="fas fa-layer-group"></i></div>
-                    <div class="coin-name-wrap">
-                        <span class="coin-name">KNCUSDT</span>
-                        <span class="target-badge">Target 1 <i class="fas fa-check"></i></span>
-                    </div>
-                </div>
-                <div class="card-time">Jul 2, 7:01 PM</div>
-            </div>
-            <div class="badges-row">
-                <span class="badge-leverage">Long 5X</span>
-                <span class="badge-entry">Entry 0.1107 <i class="far fa-copy"></i></span>
-                <span class="badge-stop">Stop 0.10660 <i class="far fa-copy"></i></span>
-            </div>
-            <div class="price-box">
-                <span class="price-label">Current price</span>
-                <span class="price-value">0.1092</span>
-                <span class="price-change up">+1.49 <i class="fas fa-arrow-up"></i></span>
-            </div>
-            <div class="card-actions">
-                <div class="action-btn"><i class="fas fa-chart-line"></i> Chart</div>
-                <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
-                <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
-            </div>
-        </div>
-
+    <!-- Main Content App Body (Grey) -->
+    <div class="main-content" id="main-container">
+        <!-- Content will be generated by JS -->
     </div>
 
     <!-- Fixed Bottom Navigation Bar -->
     <div class="bottom-nav">
-        <div class="nav-item">
+        <div class="nav-item active" data-section="home">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </div>
-        <div class="nav-item active">
+        <div class="nav-item" data-section="signals">
             <i class="fas fa-chart-bar"></i>
             <span>Signals</span>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" data-section="results">
             <i class="far fa-file-alt"></i>
             <span>Results</span>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" data-section="news">
             <i class="far fa-newspaper"></i>
             <span>News</span>
         </div>
     </div>
+    
+    <!-- Copy Toast -->
+    <div id="copy-toast">Value copied!</div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
+        
+        // Define live-tracked symbols and their card IDs
+        const liveSymbols = [
+            {id: 'card_xlm', symbol: 'XLM', name: 'xlmusdt', status: 'active', time: '1:04 PM', type: 'Long 5X', entry: '0.20156', stop: '0.19412', value: 0.197, change: -1.2},
+            {id: 'card_knc', symbol: 'KNC', name: 'kncusdt', status: 'target', time: '1:01 PM', type: 'Long 5X', entry: '0.1107', stop: '0.10660', value: 0.1092, change: 1.49},
+            {id: 'card_algo', symbol: 'ALGO', name: 'algousdt', status: 'stop', time: '11:21 AM', type: 'Long 5X', entry: '0.0872', stop: '0.0828', value: 0.0858, change: 0.23},
+        ];
+        
+        // WebSocket for live data
+        let ws;
+        
+        function initWebSocket() {
+            // Check if WebSocket already exists and is not closed
+            if (ws && ws.readyState !== WebSocket.CLOSED) return;
+            
+            // Binance stream for multiple symbols: symbol@ticker
+            const streamNames = liveSymbols.map(s => `${s.symbol.toLowerCase()}usdt@ticker`).join('/');
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${streamNames}`);
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                // Update specific card based on incoming symbol
+                const symbolMatch = data.s.replace('USDT', '');
+                updateLivePriceCard(symbolMatch, data.c, data.P);
+            };
+            
+            ws.onerror = (e) => {
+                console.error("WS error:", e);
+                // Try to reconnect in 5 seconds
+                setTimeout(initWebSocket, 5000);
+            };
+            
+            ws.onclose = () => {
+                console.log("WS closed. Reconnecting...");
+                setTimeout(initWebSocket, 5000);
+            };
+        }
+        
+        function generateHTML() {
+            const container = document.getElementById('main-container');
+            container.innerHTML = ''; // Clear
+            
+            liveSymbols.forEach(signal => {
+                let statusInfo;
+                if(signal.status === 'active') { statusInfo = { class: 'signal-active', badge: 'Active' }; }
+                else if(signal.status === 'target') { statusInfo = { class: 'signal-target', badge: 'Target 1 <i class="fas fa-check"></i>' }; }
+                else if(signal.status === 'stop') { statusInfo = { class: 'signal-stop', badge: 'Stop Loss <i class="fas fa-check"></i>' }; }
+                
+                const changeClass = signal.change >= 0 ? 'up' : 'down';
+                const changeArrow = signal.change >= 0 ? 'up' : 'down';
+                
+                const cardHtml = `
+                    <div class="signal-card ${statusInfo.class}" id="${signal.id}" onclick="tg.HapticFeedback.impact('light')">
+                        <div class="card-top">
+                            <div class="coin-info">
+                                <div class="coin-icon">${signal.symbol.substring(0,2)}</div>
+                                <div class="coin-name-wrap">
+                                    <span class="coin-name">${signal.name.toUpperCase()}</span>
+                                    <span class="status-badge">${statusInfo.badge}</span>
+                                </div>
+                            </div>
+                            <div class="card-time">${signal.time}</div>
+                        </div>
+                        <div class="badges-row">
+                            <span class="badge-leverage">${signal.type}</span>
+                            <span class="copy-badge badge-entry" onclick="copyToClipboard('${signal.entry}', event)">Entry ${signal.entry} <i class="far fa-copy"></i></span>
+                            <span class="copy-badge badge-stop" onclick="copyToClipboard('${signal.stop}', event)">Stop ${signal.stop} <i class="far fa-copy"></i></span>
+                        </div>
+                        <div class="price-box">
+                            <span class="price-label">Current price</span>
+                            <div class="live-price-wrap">
+                                <span class="price-value" id="${signal.id}_price">${signal.value}</span>
+                                <span class="price-change ${changeClass}" id="${signal.id}_change">${signal.change.toFixed(2)} <i class="fas fa-arrow-${changeArrow}"></i></span>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <div class="action-btn"><i class="fas fa-chart-line"></i> Chart</div>
+                            <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
+                            <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+        
+        // Dynamic price updates
+        function updateLivePriceCard(symbol, newPrice, newPercentChange) {
+            const signalConfig = liveSymbols.find(s => s.symbol === symbol);
+            if (!signalConfig) return;
+            
+            const cardId = signalConfig.id;
+            const priceEl = document.getElementById(`${cardId}_price`);
+            const changeEl = document.getElementById(`${cardId}_change`);
+            
+            if (!priceEl || !changeEl) return;
+            
+            // Format price: remove excessive zeros
+            const currentPrice = priceEl.innerText;
+            const formattedPrice = parseFloat(newPrice).toFixed(currentPrice.split('.')[1]?.length || 4);
+            
+            priceEl.innerText = formattedPrice;
+            
+            const numChange = parseFloat(newPercentChange);
+            const formattedChange = numChange.toFixed(2);
+            
+            changeEl.innerText = formattedChange + ' '; // Base text
+            
+            const icon = document.createElement('i');
+            if (numChange >= 0) {
+                changeEl.className = 'price-change up';
+                icon.className = 'fas fa-arrow-up';
+            } else {
+                changeEl.className = 'price-change down';
+                icon.className = 'fas fa-arrow-down';
+            }
+            changeEl.appendChild(icon);
+        }
+        
+        // Clipboard functionality
+        function copyToClipboard(text, event) {
+            // Prevent card click from firing
+            event.stopPropagation();
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    showToast(`Copied: ${text}`);
+                });
+            } else {
+                // Fallback for older browsers
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                tg.HapticFeedback.notificationOccurred('success');
+                showToast(`Copied: ${text}`);
+            }
+        }
+        
+        // Toast Notification
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('copy-toast');
+            toast.innerText = message;
+            toast.style.opacity = '1';
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2000);
+        }
+        
+        // Interactive Elements
+        function setupNavigation() {
+            // Tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelector('.tab.active').classList.remove('active');
+                    tab.classList.add('active');
+                    tg.HapticFeedback.impact('light');
+                    // Logic to load specific tab content would go here
+                });
+            });
+            
+            // Bottom Nav
+            const navItems = document.querySelectorAll('.nav-item');
+            const pageTitle = document.getElementById('page-title');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelector('.nav-item.active').classList.remove('active');
+                    item.classList.add('active');
+                    tg.HapticFeedback.impact('light');
+                    
+                    const section = item.getAttribute('data-section');
+                    // Update header title based on section
+                    pageTitle.innerText = section.charAt(0).toUpperCase() + section.slice(1);
+                    // Add logic to load section-specific content if needed
+                });
+            });
+        }
+        
+        // Main Execution
+        generateHTML();
+        setupNavigation();
+        initWebSocket(); // Start live data
+        
     </script>
 </body>
 </html>
