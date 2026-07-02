@@ -3,228 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Pro Bot</title>
+    <title>Signal King Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-        body { background-color: #1948b4; color: #333333; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        /* 🎯 GREEN BACKGROUND THEME */
+        body { background-color: #00875A; min-height: 100vh; display: flex; flex-direction: column; }
         
-        /* 🎯 REMOVED HEADER HEIGHT AND CONTENT PADDING */
-        .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 20px; padding: 25px 15px 90px 15px; flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 10; overflow-y: auto; height: calc(100vh - 20px); }
+        .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 20px; padding: 25px 15px 90px 15px; flex: 1; overflow-y: auto; }
         
-        .signal-card { background-color: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .signal-card:active { transform: scale(0.98); }
-        .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .coin-info { display: flex; align-items: center; gap: 10px; }
-        .coin-icon { width: 42px; height: 42px; background-color: #e8efff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1948b4; font-weight: bold; font-size: 16px; text-transform: uppercase;}
-        .coin-name-wrap { display: flex; align-items: center; gap: 6px; }
-        .coin-name { font-size: 18px; font-weight: bold; color: #111; }
+        .signal-card { background-color: white; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .coin-name { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 10px; }
         
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; }
-        .signal-active .status-badge { background-color: rgba(0, 200, 83, 0.1); color: #00c853; }
-        .signal-target .status-badge { background-color: #2962ff; color: white; }
-        .signal-stop .status-badge { background-color: #ff3d00; color: white; }
-        .card-time { font-size: 12px; color: #888; }
+        /* 📈 LIVE PRICE BOX */
+        .live-price-box { background: #e8f5e9; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
+        .price-label { font-size: 12px; color: #666; }
+        .price-value { font-size: 24px; font-weight: bold; color: #00875A; }
         
-        .badges-row { display: flex; gap: 8px; margin-bottom: 12px; font-size: 12px; font-weight: bold; }
-        .badge-leverage { border: 1px solid #00c853; color: #00c853; padding: 4px 10px; border-radius: 6px; background-color: rgba(0, 200, 83, 0.02); }
-        .copy-badge { cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 5px; padding: 4px 10px; color: white; -webkit-tap-highlight-color: transparent;}
-        .badge-entry { background-color: #00c853;}
-        .badge-stop { background-color: #ff3d00;}
-        
-        .price-box { background-color: #f0f3f8; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .price-label { font-size: 13px; color: #666; }
-        .live-price-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-        .price-value { font-size: 19px; font-weight: bold; color: #222; }
-        .price-change { font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 2px; }
-        .price-change.up { color: #00c853; }
-        .price-change.down { color: #ff3d00; }
-        
-        .card-actions { display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; padding-top: 12px; font-size: 14px; color: #1948b4; font-weight: 500; }
-        .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .action-btn.gray { color: #777; }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 75px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #e5e9f2; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); z-index: 100; }
-        .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #1948b4; font-size: 13px; font-weight: bold; gap: 4px; padding: 10px 30px; cursor: pointer; -webkit-tap-highlight-color: transparent;}
-        .nav-item-center i { font-size: 24px; }
-
-        .chart-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.75); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; }
-        .chart-container { background-color: #131722; border-top-left-radius: 20px; border-top-right-radius: 20px; height: 75vh; width: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #1c2030; color: white; border-bottom: 1px solid #2a2e39; }
-        .chart-title { font-size: 16px; font-weight: bold; }
-        .close-chart-btn { background: none; border: none; color: #b2b5be; font-size: 20px; cursor: pointer; padding: 5px; }
-        #tv-widget-area { flex: 1; width: 100%; background-color: #131722; }
-        #copy-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; }
-        .no-data { text-align: center; padding: 40px; color: #888; font-size: 16px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; height: 70px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #ddd; }
+        .nav-item { color: #00875A; font-weight: bold; font-size: 14px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <!-- 🎯 HEADER CODE REMOVED ENTIRELY -->
-
     <div class="main-content" id="main-container">
-        <div class="no-data">Loading live automated signals...</div>
-    </div>
-
-    <div class="chart-overlay" id="chartModal">
-        <div class="chart-container">
-            <div class="chart-header">
-                <span class="chart-title" id="modalChartTitle">LIVE CHART</span>
-                <button class="close-chart-btn" onclick="closeChart()"><i class="fas fa-times"></i></button>
+        <!-- BTC LIVE PRICE CARD -->
+        <div class="signal-card">
+            <div class="coin-name">BTC/USDT Live</div>
+            <div class="live-price-box">
+                <div class="price-label">Current Market Price</div>
+                <div class="price-value" id="btc-price">Loading...</div>
             </div>
-            <div id="tv-widget-area"></div>
         </div>
+        
+        <!-- SIGNALS LIST CONTAINER -->
+        <div id="signals-list"></div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item-center">
-            <i class="fas fa-chart-bar"></i>
-            <span>Signals</span>
+        <div class="nav-item">
+            <i class="fas fa-chart-bar" style="font-size: 20px;"></i><br>
+            Signals
         </div>
     </div>
-    
-    <div id="copy-toast">Value copied!</div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); tg.ready();
+        tg.expand();
         
-        const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
-        
-        let supabase = null;
-        if(SUPABASE_URL !== "YOUR_SUPABASE_URL") {
-            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        }
-        
-        let liveSymbols = [];
-        let ws;
-        const ALLOWED_COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+        // 🚀 BTC LIVE PRICE SOCKET
+        const btcSocket = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+        btcSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            document.getElementById('btc-price').innerText = '$' + parseFloat(data.c).toLocaleString();
+        };
 
-        const demoSignals = [
-            { id: "card_b1", symbol: "BTC", name: "btcusdt", tvSymbol: "BINANCE:BTCUSDT", status: "active", time: "02:00 AM", type: "LONG 5X", entry: "92450.00", stop: "91100.00", value: 92450.00 },
-            { id: "card_e1", symbol: "ETH", name: "ethusdt", tvSymbol: "BINANCE:ETHUSDT", status: "target", time: "01:45 AM", type: "LONG 5X", entry: "3120.50", stop: "3070.00", value: 3120.50 },
-            { id: "card_s1", symbol: "SOL", name: "solusdt", tvSymbol: "BINANCE:SOLUSDT", status: "active", time: "01:30 AM", type: "SHORT 5X", entry: "214.20", stop: "218.00", value: 214.20 }
-        ];
-        
-        async function loadSignals() {
-            if (!supabase) {
-                liveSymbols = demoSignals;
-                generateHTML();
-                initWebSocket();
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase.from('signals').select('*').order('id', { ascending: false });
-                if (!error && data && data.length > 0) {
-                    const filteredData = data.filter(item => ALLOWED_COINS.includes(item.symbol.toUpperCase()));
-                    if (filteredData.length > 0) {
-                        liveSymbols = filteredData.map(item => ({
-                            id: `card_${item.id}`,
-                            symbol: item.symbol.replace('USDT', ''),
-                            name: item.symbol.toLowerCase(),
-                            tvSymbol: `BINANCE:${item.symbol.toUpperCase()}`,
-                            status: item.status,
-                            time: item.time,
-                            type: item.type,
-                            entry: item.entry,
-                            stop: item.stop,
-                            value: parseFloat(item.entry),
-                            change: 0.00
-                        }));
-                    } else { liveSymbols = demoSignals; }
-                } else { liveSymbols = demoSignals; }
-            } catch (e) {
-                liveSymbols = demoSignals;
-            }
-            generateHTML();
-            initWebSocket();
-        }
-
-        function initWebSocket() {
-            if (ws && ws.readyState !== WebSocket.CLOSED) return;
-            const streamNames = liveSymbols.map(s => `${s.name}@ticker`).join('/');
-            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${streamNames}`);
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                updateLivePriceCard(data.s.replace('USDT', ''), data.c, data.P);
-            };
-        }
-        
-        function generateHTML() {
-            const container = document.getElementById('main-container');
-            container.innerHTML = '';
-            liveSymbols.forEach(signal => {
-                let statusInfo = signal.status === 'active' ? { class: 'signal-active', badge: 'Active' } :
-                                 signal.status === 'target' ? { class: 'signal-target', badge: 'Target <i class="fas fa-check"></i>' } :
-                                 { class: 'signal-stop', badge: 'Stop Loss <i class="fas fa-check"></i>' };
-                
-                container.innerHTML += `
-                    <div class="signal-card ${statusInfo.class}" id="${signal.id}">
-                        <div class="card-top">
-                            <div class="coin-info">
-                                <div class="coin-icon">${signal.symbol.substring(0,2)}</div>
-                                <div class="coin-name-wrap">
-                                    <span class="coin-name">${signal.symbol}USDT</span>
-                                    <span class="status-badge">${statusInfo.badge}</span>
-                                </div>
-                            </div>
-                            <div class="card-time">${signal.time}</div>
-                        </div>
-                        <div class="badges-row">
-                            <span class="badge-leverage">${signal.type}</span>
-                            <span class="copy-badge badge-entry" onclick="copyToClipboard('${signal.entry}', event)">Entry ${signal.entry} <i class="far fa-copy"></i></span>
-                            <span class="copy-badge badge-stop" onclick="copyToClipboard('${signal.stop}', event)">Stop ${signal.stop} <i class="far fa-copy"></i></span>
-                        </div>
-                        <div class="price-box">
-                            <span class="price-label">Current price</span>
-                            <div class="live-price-wrap">
-                                <span class="price-value" id="${signalConfig.id}_price">${signal.value}</span>
-                                <span class="price-change up" id="${signalConfig.id}_change">0.00%</span>
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <div class="action-btn" onclick="openChart('${signal.tvSymbol}', '${signal.symbol}USDT', event)"><i class="fas fa-chart-line"></i> Chart</div>
-                            <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
-                            <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
-                        </div>
-                    </div>`;
-            });
-        }
-        
-        function updateLivePriceCard(symbol, newPrice, newPercentChange) {
-            const signalConfig = liveSymbols.find(s => s.symbol === symbol);
-            if (!signalConfig) return;
-            const priceEl = document.getElementById(`${signalConfig.id}_price`);
-            const changeEl = document.getElementById(`${signalConfig.id}_change`);
-            if (priceEl && changeEl) {
-                priceEl.innerText = parseFloat(newPrice).toFixed(2);
-                const numChange = parseFloat(newPercentChange);
-                changeEl.innerText = numChange.toFixed(2) + '% ';
-                if (numChange >= 0) changeEl.className = 'price-change up';
-                else changeEl.className = 'price-change down';
-            }
-        }
-
-        function openChart(tvSymbol, pairName, event) {
-            event.stopPropagation();
-            document.getElementById('modalChartTitle').innerText = `${pairName} LIVE CHART`;
-            document.getElementById('chartModal').style.display = 'flex';
-            document.getElementById('tv-widget-area').innerHTML = ''; 
-            new TradingView.widget({
-                "autosize": true, "symbol": tvSymbol, "interval": "60", "theme": "dark", "style": "1", "locale": "en",
-                "enable_publishing": false, "hide_side_toolbar": true, "allow_symbol_change": false, "container_id": "tv-widget-area"
-            });
-        }
-        function closeChart() { document.getElementById('chartModal').style.display = 'none'; }
-        function copyToClipboard(text, event) { event.stopPropagation(); navigator.clipboard.writeText(text); showToast(`Copied: ${text}`); }
-        function showToast(m) { const t = document.getElementById('copy-toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000); }
-        
-        loadSignals();
+        // আপনি আগের মতোই Supabase বা অন্য Logic এখানে রাখতে পারেন।
+        console.log("App loaded with Green Theme & Live BTC Price");
     </script>
 </body>
 </html>
