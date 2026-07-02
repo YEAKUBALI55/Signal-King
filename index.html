@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Live</title>
+    <title>Signal King Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #1948b4; color: #333333; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
@@ -26,7 +28,7 @@
         .main-content { background-color: #f4f6fa; border-top-left-radius: 24px; border-top-right-radius: 24px; margin-top: 100px; padding: 15px 15px 80px 15px; flex: 1; display: flex; flex-direction: column; gap: 15px; z-index: 10; overflow-y: auto; height: calc(100vh - 100px); }
         
         /* Signal Card */
-        .signal-card { background-color: white; border-radius: 16px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative;}
+        .signal-card { background-color: white; border-radius: 16px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.1s; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .signal-card:active { transform: scale(0.98); }
         .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .coin-info { display: flex; align-items: center; gap: 10px; }
@@ -35,13 +37,11 @@
         .coin-name { font-size: 18px; font-weight: bold; color: #111; }
         .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 500; text-transform: uppercase; border: 1px solid;}
         
-        /* Status Color Classes */
         .signal-active .status-badge { background-color: rgba(0, 200, 83, 0.1); color: #00c853; border-color: transparent; }
         .signal-target .status-badge { background-color: #2962ff; color: white; border-color: transparent; }
         .signal-stop .status-badge { background-color: #ff3d00; color: white; border-color: transparent; }
         .signal-card .card-time { font-size: 12px; color: #888; }
         
-        /* Copy Badge Interaction */
         .badges-row { display: flex; gap: 6px; margin-bottom: 12px; font-size: 12px; font-weight: bold; overflow-x: auto;}
         .badge-leverage { border: 1px solid #00c853; color: #00c853; padding: 3px 8px; border-radius: 4px; background-color: rgba(0, 200, 83, 0.03); white-space: nowrap;}
         .copy-badge { cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 4px; padding: 3px 8px; color: white; -webkit-tap-highlight-color: transparent;}
@@ -63,16 +63,21 @@
         .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .action-btn:active { color: #111; }
         .action-btn.gray { color: #666; }
-        .action-btn.gray:active { color: #333;}
         
         /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 65px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e0e0e0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 11px; font-weight: 500; text-decoration: none; gap: 4px; width: 25%; height: 100%; cursor: pointer; -webkit-tap-highlight-color: transparent;}
-        .nav-item:active { color: #555; }
-        .nav-item i { font-size: 20px; }
         .nav-item.active { color: #1948b4; }
+        .nav-item i { font-size: 20px; }
         
-        /* Copy Notification Popup */
+        /* TradingView Chart Overlay Popup */
+        .chart-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.75); z-index: 1000; display: none; flex-direction: column; justify-content: flex-end; }
+        .chart-container { background-color: #131722; border-top-left-radius: 20px; border-top-right-radius: 20px; height: 70vh; width: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background-color: #1c2030; color: white; border-bottom: 1px solid #2a2e39; }
+        .chart-title { font-size: 16px; font-weight: bold; }
+        .close-chart-btn { background: none; border: none; color: #b2b5be; font-size: 20px; cursor: pointer; padding: 5px; }
+        #tv-widget-area { flex: 1; width: 100%; }
+
         #copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; white-space: nowrap;}
     </style>
 </head>
@@ -88,41 +93,50 @@
                 <i class="fas fa-cog"></i>
             </div>
         </div>
-        <!-- Tabs -->
         <div class="tabs-container">
-            <div class="tab active" data-content="futures">Futures</div>
-            <div class="tab" data-content="spots">Spots</div>
-            <div class="tab" data-content="trades">Trades</div>
-            <div class="tab" data-content="pins">Pins</div>
+            <div class="tab active">Futures</div>
+            <div class="tab">Spots</div>
+            <div class="tab">Trades</div>
+            <div class="tab">Pins</div>
         </div>
     </div>
 
-    <!-- Main Content App Body (Grey) -->
+    <!-- Main Content App Body -->
     <div class="main-content" id="main-container">
-        <!-- Content will be generated by JS -->
+        <!-- Generated by JS -->
     </div>
 
-    <!-- Fixed Bottom Navigation Bar -->
+    <!-- TradingView Overlay Modal -->
+    <div class="chart-overlay" id="chartModal">
+        <div class="chart-container">
+            <div class="chart-header">
+                <span class="chart-title" id="modalChartTitle">BINANCE LIVE CHART</span>
+                <button class="close-chart-btn" onclick="closeChart()"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="tv-widget-area"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <div class="nav-item active" data-section="home">
+        <div class="nav-item">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </div>
-        <div class="nav-item" data-section="signals">
+        <div class="nav-item active">
             <i class="fas fa-chart-bar"></i>
             <span>Signals</span>
         </div>
-        <div class="nav-item" data-section="results">
+        <div class="nav-item">
             <i class="far fa-file-alt"></i>
             <span>Results</span>
         </div>
-        <div class="nav-item" data-section="news">
+        <div class="nav-item">
             <i class="far fa-newspaper"></i>
             <span>News</span>
         </div>
     </div>
     
-    <!-- Copy Toast -->
     <div id="copy-toast">Value copied!</div>
 
     <script>
@@ -130,58 +144,42 @@
         tg.expand();
         tg.ready();
         
-        // Define live-tracked symbols and their card IDs
         const liveSymbols = [
-            {id: 'card_xlm', symbol: 'XLM', name: 'xlmusdt', status: 'active', time: '1:04 PM', type: 'Long 5X', entry: '0.20156', stop: '0.19412', value: 0.197, change: -1.2},
-            {id: 'card_knc', symbol: 'KNC', name: 'kncusdt', status: 'target', time: '1:01 PM', type: 'Long 5X', entry: '0.1107', stop: '0.10660', value: 0.1092, change: 1.49},
-            {id: 'card_algo', symbol: 'ALGO', name: 'algousdt', status: 'stop', time: '11:21 AM', type: 'Long 5X', entry: '0.0872', stop: '0.0828', value: 0.0858, change: 0.23},
+            {id: 'card_xlm', symbol: 'XLM', name: 'xlmusdt', tvSymbol: 'BINANCE:XLMUSDT', status: 'active', time: '1:04 PM', type: 'Long 5X', entry: '0.20156', stop: '0.19412', value: 0.197, change: -1.2},
+            {id: 'card_knc', symbol: 'KNC', name: 'kncusdt', tvSymbol: 'BINANCE:KNCUSDT', status: 'target', time: '1:01 PM', type: 'Long 5X', entry: '0.1107', stop: '0.10660', value: 0.1092, change: 1.49},
+            {id: 'card_algo', symbol: 'ALGO', name: 'algousdt', tvSymbol: 'BINANCE:ALGOUSDT', status: 'stop', time: '11:21 AM', type: 'Long 5X', entry: '0.0872', stop: '0.0828', value: 0.0858, change: 0.23},
         ];
         
-        // WebSocket for live data
         let ws;
         
         function initWebSocket() {
-            // Check if WebSocket already exists and is not closed
             if (ws && ws.readyState !== WebSocket.CLOSED) return;
-            
-            // Binance stream for multiple symbols: symbol@ticker
             const streamNames = liveSymbols.map(s => `${s.symbol.toLowerCase()}usdt@ticker`).join('/');
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${streamNames}`);
             
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                // Update specific card based on incoming symbol
                 const symbolMatch = data.s.replace('USDT', '');
                 updateLivePriceCard(symbolMatch, data.c, data.P);
             };
-            
-            ws.onerror = (e) => {
-                console.error("WS error:", e);
-                // Try to reconnect in 5 seconds
-                setTimeout(initWebSocket, 5000);
-            };
-            
-            ws.onclose = () => {
-                console.log("WS closed. Reconnecting...");
-                setTimeout(initWebSocket, 5000);
-            };
+            ws.onerror = () => setTimeout(initWebSocket, 5000);
+            ws.onclose = () => setTimeout(initWebSocket, 5000);
         }
         
         function generateHTML() {
             const container = document.getElementById('main-container');
-            container.innerHTML = ''; // Clear
+            container.innerHTML = '';
             
             liveSymbols.forEach(signal => {
-                let statusInfo;
-                if(signal.status === 'active') { statusInfo = { class: 'signal-active', badge: 'Active' }; }
-                else if(signal.status === 'target') { statusInfo = { class: 'signal-target', badge: 'Target 1 <i class="fas fa-check"></i>' }; }
-                else if(signal.status === 'stop') { statusInfo = { class: 'signal-stop', badge: 'Stop Loss <i class="fas fa-check"></i>' }; }
+                let statusInfo = signal.status === 'active' ? { class: 'signal-active', badge: 'Active' } :
+                                 signal.status === 'target' ? { class: 'signal-target', badge: 'Target 1 <i class="fas fa-check"></i>' } :
+                                 { class: 'signal-stop', badge: 'Stop Loss <i class="fas fa-check"></i>' };
                 
                 const changeClass = signal.change >= 0 ? 'up' : 'down';
                 const changeArrow = signal.change >= 0 ? 'up' : 'down';
                 
                 const cardHtml = `
-                    <div class="signal-card ${statusInfo.class}" id="${signal.id}" onclick="tg.HapticFeedback.impact('light')">
+                    <div class="signal-card ${statusInfo.class}" id="${signal.id}">
                         <div class="card-top">
                             <div class="coin-info">
                                 <div class="coin-icon">${signal.symbol.substring(0,2)}</div>
@@ -205,7 +203,7 @@
                             </div>
                         </div>
                         <div class="card-actions">
-                            <div class="action-btn"><i class="fas fa-chart-line"></i> Chart</div>
+                            <div class="action-btn" onclick="openChart('${signal.tvSymbol}', '${signal.name.toUpperCase()}', event)"><i class="fas fa-chart-line"></i> Chart</div>
                             <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
                             <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
                         </div>
@@ -215,109 +213,78 @@
             });
         }
         
-        // Dynamic price updates
         function updateLivePriceCard(symbol, newPrice, newPercentChange) {
             const signalConfig = liveSymbols.find(s => s.symbol === symbol);
             if (!signalConfig) return;
             
-            const cardId = signalConfig.id;
-            const priceEl = document.getElementById(`${cardId}_price`);
-            const changeEl = document.getElementById(`${cardId}_change`);
-            
+            const priceEl = document.getElementById(`${signalConfig.id}_price`);
+            const changeEl = document.getElementById(`${signalConfig.id}_change`);
             if (!priceEl || !changeEl) return;
             
-            // Format price: remove excessive zeros
-            const currentPrice = priceEl.innerText;
-            const formattedPrice = parseFloat(newPrice).toFixed(currentPrice.split('.')[1]?.length || 4);
-            
-            priceEl.innerText = formattedPrice;
-            
+            priceEl.innerText = parseFloat(newPrice).toFixed(currentDigits(priceEl.innerText));
             const numChange = parseFloat(newPercentChange);
-            const formattedChange = numChange.toFixed(2);
-            
-            changeEl.innerText = formattedChange + ' '; // Base text
+            changeEl.innerText = numChange.toFixed(2) + ' ';
             
             const icon = document.createElement('i');
-            if (numChange >= 0) {
-                changeEl.className = 'price-change up';
-                icon.className = 'fas fa-arrow-up';
-            } else {
-                changeEl.className = 'price-change down';
-                icon.className = 'fas fa-arrow-down';
-            }
+            if (numChange >= 0) { changeEl.className = 'price-change up'; icon.className = 'fas fa-arrow-up'; }
+            else { changeEl.className = 'price-change down'; icon.className = 'fas fa-arrow-down'; }
             changeEl.appendChild(icon);
         }
+
+        function currentDigits(text) { return text.split('.')[1]?.length || 4; }
         
-        // Clipboard functionality
-        function copyToClipboard(text, event) {
-            // Prevent card click from firing
-            event.stopPropagation();
+        // TradingView Functions
+        function openChart(tvSymbol, pairName, event) {
+            event.stopPropagation(); // Stop card action
+            tg.HapticFeedback.impact('medium');
             
+            document.getElementById('modalChartTitle').innerText = `${pairName} LIVE CHART (BINANCE)`;
+            document.getElementById('chartModal').style.display = 'flex';
+            
+            // Render TradingView Widget inside the div
+            new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": tvSymbol,
+                "interval": "60",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": true,
+                "allow_symbol_change": false,
+                "container_id": "tv-widget-area"
+            });
+        }
+        
+        function closeChart() {
+            tg.HapticFeedback.impact('light');
+            document.getElementById('chartModal').style.style.display = 'none';
+            document.getElementById('tv-widget-area').innerHTML = ''; // clear chart frame
+        }
+        
+        function copyToClipboard(text, event) {
+            event.stopPropagation();
             if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    showToast(`Copied: ${text}`);
-                });
-            } else {
-                // Fallback for older browsers
-                const el = document.createElement('textarea');
-                el.value = text;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
-                tg.HapticFeedback.notificationOccurred('success');
-                showToast(`Copied: ${text}`);
+                navigator.clipboard.writeText(text).then(() => { tg.HapticFeedback.notificationOccurred('success'); showToast(`Copied: ${text}`); });
+            }
+            // fallback
+            else {
+                const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+                tg.HapticFeedback.notificationOccurred('success'); showToast(`Copied: ${text}`);
             }
         }
         
-        // Toast Notification
         let toastTimeout;
         function showToast(message) {
-            const toast = document.getElementById('copy-toast');
-            toast.innerText = message;
-            toast.style.opacity = '1';
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.style.opacity = '0';
-            }, 2000);
+            const toast = document.getElementById('copy-toast'); toast.innerText = message; toast.style.opacity = '1';
+            clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
         }
         
-        // Interactive Elements
-        function setupNavigation() {
-            // Tabs
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelector('.tab.active').classList.remove('active');
-                    tab.classList.add('active');
-                    tg.HapticFeedback.impact('light');
-                    // Logic to load specific tab content would go here
-                });
-            });
-            
-            // Bottom Nav
-            const navItems = document.querySelectorAll('.nav-item');
-            const pageTitle = document.getElementById('page-title');
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    document.querySelector('.nav-item.active').classList.remove('active');
-                    item.classList.add('active');
-                    tg.HapticFeedback.impact('light');
-                    
-                    const section = item.getAttribute('data-section');
-                    // Update header title based on section
-                    pageTitle.innerText = section.charAt(0).toUpperCase() + section.slice(1);
-                    // Add logic to load section-specific content if needed
-                });
-            });
-        }
-        
-        // Main Execution
         generateHTML();
-        setupNavigation();
-        initWebSocket(); // Start live data
-        
+        initWebSocket();
     </script>
 </body>
 </html>
