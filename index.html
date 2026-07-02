@@ -51,7 +51,6 @@
         .action-btn { display: flex; align-items: center; gap: 6px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .action-btn.gray { color: #777; }
         
-        /* 🎯 MODIFIED BOTTOM NAV: Only 1 Single Middle Button */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 75px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #e5e9f2; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); z-index: 100; }
         .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #1948b4; font-size: 13px; font-weight: bold; gap: 4px; padding: 10px 30px; cursor: pointer; -webkit-tap-highlight-color: transparent;}
         .nav-item-center i { font-size: 24px; }
@@ -89,7 +88,6 @@
         </div>
     </div>
 
-    <!-- 🎯 ONLY ONE MIDDLE OPTION -->
     <div class="bottom-nav">
         <div class="nav-item-center">
             <i class="fas fa-chart-bar"></i>
@@ -103,90 +101,87 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); tg.ready();
         
-        // 🛠️ PUT YOUR SUPABASE CREDENTIALS HERE
+        // 🛠️ আপনার আসল Supabase তথ্য এখানে দিন (না দিলেও নিচের ডেমো ডাটা কাজ করবে)
         const SUPABASE_URL = "YOUR_SUPABASE_URL"; 
         const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabase = null;
+        if(SUPABASE_URL !== "YOUR_SUPABASE_URL") {
+            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+        
         let liveSymbols = [];
         let ws;
-
-        // 🎯 DEFINED 3 ALLOWED COINS ONLY
         const ALLOWED_COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+
+        // 🎯 ডেমো ডাটা (Fallback) - যদি ডাটাবেস খালি থাকে বা কানেক্ট না হয়
+        const demoSignals = [
+            { id: "card_b1", symbol: "BTC", name: "btcusdt", tvSymbol: "BINANCE:BTCUSDT", status: "active", time: "02:00 AM", type: "LONG 5X", entry: "92450.00", stop: "91100.00", value: 92450.00 },
+            { id: "card_e1", symbol: "ETH", name: "ethusdt", tvSymbol: "BINANCE:ETHUSDT", status: "target", time: "01:45 AM", type: "LONG 5X", entry: "3120.50", stop: "3070.00", value: 3120.50 },
+            { id: "card_s1", symbol: "SOL", name: "solusdt", tvSymbol: "BINANCE:SOLUSDT", status: "active", time: "01:30 AM", type: "SHORT 5X", entry: "214.20", stop: "218.00", value: 214.20 }
+        ];
         
-        async function fetchSignalsFromDB() {
-            // Fetching data from Supabase
-            const { data, error } = await supabase.from('signals').select('*').order('id', { ascending: false });
-            if (error) { console.error("Error loading signals:", error); return; }
-            
-            if (data && data.length > 0) {
-                // Filter database entries to only include the 3 specific coins
-                const filteredData = data.filter(item => ALLOWED_COINS.includes(item.symbol.toUpperCase()));
-                
-                if (filteredData.length > 0) {
-                    liveSymbols = filteredData.map(item => ({
-                        id: `card_${item.id}`,
-                        symbol: item.symbol.replace('USDT', ''),
-                        name: item.symbol.toLowerCase(),
-                        tvSymbol: `BINANCE:${item.symbol.toUpperCase()}`,
-                        status: item.status,
-                        time: item.time,
-                        type: item.type,
-                        entry: item.entry,
-                        stop: item.stop,
-                        value: parseFloat(item.entry),
-                        change: 0.00
-                    }));
-                    generateHTML();
-                    initWebSocket();
-                } else {
-                    document.getElementById('main-container').innerHTML = '<div class="no-data">No active signals for BTC, ETH, or SOL.</div>';
-                }
-            } else {
-                document.getElementById('main-container').innerHTML = '<div class="no-data">No signals found in DB.</div>';
+        async function loadSignals() {
+            if (!supabase) {
+                // যদি সুপাবেস কনফিগার করা না থাকে, সরাসরি ডেমো ডাটা লোড হবে
+                liveSymbols = demoSignals;
+                generateHTML();
+                initWebSocket();
+                return;
             }
+
+            try {
+                const { data, error } = await supabase.from('signals').select('*').order('id', { ascending: false });
+                if (!error && data && data.length > 0) {
+                    const filteredData = data.filter(item => ALLOWED_COINS.includes(item.symbol.toUpperCase()));
+                    if (filteredData.length > 0) {
+                        liveSymbols = filteredData.map(item => ({
+                            id: `card_${item.id}`,
+                            symbol: item.symbol.replace('USDT', ''),
+                            name: item.symbol.toLowerCase(),
+                            tvSymbol: `BINANCE:${item.symbol.toUpperCase()}`,
+                            status: item.status,
+                            time: item.time,
+                            type: item.type,
+                            entry: item.entry,
+                            stop: item.stop,
+                            value: parseFloat(item.entry),
+                            change: 0.00
+                        }));
+                    } else { liveSymbols = demoSignals; }
+                } else { liveSymbols = demoSignals; }
+            } catch (e) {
+                liveSymbols = demoSignals;
+            }
+            generateHTML();
+            initWebSocket();
         }
 
-        function subscribeToDBChanges() {
-            supabase.channel('custom-all-channel')
-            .on('postgres_changes', { event: '*', filter: 'table=eq.signals' }, (payload) => {
-                fetchSignalsFromDB();
-            })
-            .subscribe();
-        }
-        
         function initWebSocket() {
             if (ws && ws.readyState !== WebSocket.CLOSED) return;
-            if (liveSymbols.length === 0) return;
-            
             const streamNames = liveSymbols.map(s => `${s.name}@ticker`).join('/');
             ws = new WebSocket(`wss://stream.binance.com:9443/ws/${streamNames}`);
-            
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                const symbolMatch = data.s.replace('USDT', '');
-                updateLivePriceCard(symbolMatch, data.c, data.P);
+                updateLivePriceCard(data.s.replace('USDT', ''), data.c, data.P);
             };
-            ws.onerror = () => setTimeout(initWebSocket, 5000);
-            ws.onclose = () => setTimeout(initWebSocket, 5000);
         }
         
         function generateHTML() {
             const container = document.getElementById('main-container');
             container.innerHTML = '';
-            
             liveSymbols.forEach(signal => {
                 let statusInfo = signal.status === 'active' ? { class: 'signal-active', badge: 'Active' } :
                                  signal.status === 'target' ? { class: 'signal-target', badge: 'Target <i class="fas fa-check"></i>' } :
                                  { class: 'signal-stop', badge: 'Stop Loss <i class="fas fa-check"></i>' };
                 
-                const cardHtml = `
+                container.innerHTML += `
                     <div class="signal-card ${statusInfo.class}" id="${signal.id}">
                         <div class="card-top">
                             <div class="coin-info">
                                 <div class="coin-icon">${signal.symbol.substring(0,2)}</div>
                                 <div class="coin-name-wrap">
-                                    <span class="coin-name">${signal.name.toUpperCase()}</span>
+                                    <span class="coin-name">${signal.symbol}USDT</span>
                                     <span class="status-badge">${statusInfo.badge}</span>
                                 </div>
                             </div>
@@ -205,78 +200,43 @@
                             </div>
                         </div>
                         <div class="card-actions">
-                            <div class="action-btn" onclick="openChart('${signal.tvSymbol}', '${signal.name.toUpperCase()}', event)"><i class="fas fa-chart-line"></i> Chart</div>
+                            <div class="action-btn" onclick="openChart('${signal.tvSymbol}', '${signal.symbol}USDT', event)"><i class="fas fa-chart-line"></i> Chart</div>
                             <div class="action-btn gray"><i class="far fa-star"></i> Pin</div>
                             <div class="action-btn gray"><i class="fas fa-bolt"></i> Auto trade</div>
                         </div>
-                    </div>
-                `;
-                container.innerHTML += cardHtml;
+                    </div>`;
             });
         }
         
         function updateLivePriceCard(symbol, newPrice, newPercentChange) {
             const signalConfig = liveSymbols.find(s => s.symbol === symbol);
             if (!signalConfig) return;
-            
             const priceEl = document.getElementById(`${signalConfig.id}_price`);
             const changeEl = document.getElementById(`${signalConfig.id}_change`);
-            if (!priceEl || !changeEl) return;
-            
-            priceEl.innerText = parseFloat(newPrice).toFixed(2);
-            const numChange = parseFloat(newPercentChange);
-            changeEl.innerText = numChange.toFixed(2) + '% ';
-            
-            const icon = document.createElement('i');
-            if (numChange >= 0) { changeEl.className = 'price-change up'; icon.className = 'fas fa-arrow-up'; }
-            else { changeEl.className = 'price-change down'; icon.className = 'fas fa-arrow-down'; }
-            changeEl.appendChild(icon);
+            if (priceEl && changeEl) {
+                priceEl.innerText = parseFloat(newPrice).toFixed(2);
+                const numChange = parseFloat(newPercentChange);
+                changeEl.innerText = numChange.toFixed(2) + '% ';
+                if (numChange >= 0) changeEl.className = 'price-change up';
+                else changeEl.className = 'price-change down';
+            }
         }
 
         function openChart(tvSymbol, pairName, event) {
-            event.stopPropagation(); 
-            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('medium');
-            
+            event.stopPropagation();
             document.getElementById('modalChartTitle').innerText = `${pairName} LIVE CHART`;
             document.getElementById('chartModal').style.display = 'flex';
             document.getElementById('tv-widget-area').innerHTML = ''; 
-            
             new TradingView.widget({
-                "autosize": true,
-                "symbol": tvSymbol,
-                "interval": "60",
-                "timezone": "Etc/UTC",
-                "theme": "dark",
-                "style": "1",
-                "locale": "en",
-                "enable_publishing": false,
-                "hide_side_toolbar": true,
-                "allow_symbol_change": false,
-                "container_id": "tv-widget-area"
+                "autosize": true, "symbol": tvSymbol, "interval": "60", "theme": "dark", "style": "1", "locale": "en",
+                "enable_publishing": false, "hide_side_toolbar": true, "allow_symbol_change": false, "container_id": "tv-widget-area"
             });
         }
+        function closeChart() { document.getElementById('chartModal').style.display = 'none'; }
+        function copyToClipboard(text, event) { event.stopPropagation(); navigator.clipboard.writeText(text); showToast(`Copied: ${text}`); }
+        function showToast(m) { const t = document.getElementById('copy-toast'); t.innerText = m; t.style.opacity = '1'; setTimeout(() => t.style.opacity = '0', 2000); }
         
-        function closeChart() {
-            if (window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('light');
-            document.getElementById('chartModal').style.display = 'none';
-            document.getElementById('tv-widget-area').innerHTML = ''; 
-        }
-        
-        function copyToClipboard(text, event) {
-            event.stopPropagation();
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => { if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); showToast(`Copied: ${text}`); });
-            }
-        }
-        
-        let toastTimeout;
-        function showToast(message) {
-            const toast = document.getElementById('copy-toast'); toast.innerText = message; toast.style.opacity = '1';
-            clearTimeout(toastTimeout); toastTimeout = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-        }
-        
-        fetchSignalsFromDB();
-        subscribeToDBChanges();
+        loadSignals();
     </script>
 </body>
 </html>
