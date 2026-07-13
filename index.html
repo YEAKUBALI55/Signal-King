@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultimate Pure Shorts Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Perfect Screen Shorts Feed</title>
     <style>
         html, body {
             margin: 0;
@@ -17,7 +17,7 @@
             user-select: none;
         }
 
-        /* Native-like vertical snap-scrolling viewport */
+        /* Native Snap-Scrolling Viewport */
         .shorts-container {
             width: 100%;
             height: 100%;
@@ -26,7 +26,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Fully hide scrollbars across all device formats */
         .shorts-container::-webkit-scrollbar {
             display: none;
         }
@@ -35,9 +34,11 @@
             scrollbar-width: none;  
         }
 
+        /* Exact Full Screen Height Lock */
         .short-slide {
             width: 100%;
             height: 100vh;
+            height: -webkit-fill-available;
             scroll-snap-align: start;
             scroll-snap-stop: always;
             position: relative;
@@ -45,24 +46,27 @@
             overflow: hidden;
         }
 
+        /* Crop Control Panels & Force Ultra-Full Screen Grid */
         .video-wrapper {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 56.25vw; /* 16:9 Aspect Ratio Aspect */
+            min-height: 100vh;
+            min-width: 177.77vh; /* Reverse Aspect ratio to overflow horizontal controls */
+            transform: translate(-50%, -50%) scale(1.15); 
+            transform-origin: center center;
+            pointer-events: none;
         }
 
-        /* Scale and stretch video to match full vertical viewport layout */
         .video-wrapper iframe {
             width: 100%;
             height: 100%;
             border: none;
-            transform: scale(1.35); /* Crops outer native youtube brand controls away */
-            transform-origin: center center;
         }
 
-        /* Invisible layer that intercepts clicks to toggle mute smoothly */
+        /* Touch layer handles screen interactions safely */
         .touch-overlay {
             position: absolute;
             top: 0;
@@ -73,117 +77,184 @@
             cursor: pointer;
         }
 
-        /* Subtle dynamic audio indicator tip floating on top */
         .audio-tip {
             position: absolute;
-            top: 20px;
+            top: 40px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.75);
             color: #ffffff;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             z-index: 20;
             pointer-events: none;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            opacity: 0.8;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
 <body>
 
     <div class="shorts-container" id="shortsFeed">
-        <!-- Injected dynamically via script engine -->
+        <!-- Injected Dynamically -->
     </div>
 
-    <!-- Load the official standard script library handler safely -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-
+    <!-- Official YT API Loader Hook -->
     <script>
-        // Massive diverse pool list containing popular viral short target clips
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
         const shortPool = [
             'q5d2OLc9D_c', 'JfVOs4VSpmA', 'd9MyW72ELq0', 'zSWdZVtXT7E', 'itnqEauWQZM',
-            'tgbNymZ7vqY', '3JZ_D3K5xK0', '9bZkp7q19f0', '2Vv-BfVoq4g', 'jNQXAC9IVRw',
-            'C8jxPnq_Cuc', 'L_LUpnjgPso', 'V-_O7nl0Ii0', '862r3XS2YB0', 'kxPCFljwJws',
-            'W6NZfCO5SIk', 'YQHsXMglC9A', 'NlR_j_Y4XqQ', 'OpQFFLBMEPI', 'Vw4K4FPpHrM'
+            'tgbNymZ7vqY', '3JZ_D3K5xK0', '9bZkp7q19f0', '2Vv-BfVoq4g', 'jNQXAC9IVRw'
         ];
 
         const feed = document.getElementById('shortsFeed');
-        let playersList = {};
+        let players = {};
+        let isGlobalUnmuted = false; // Tracks if user enabled sound once
 
-        // Shuffle algorithm to mix videos completely fresh on every single load session
         function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
+            return array.sort(() => Math.random() - 0.5);
         }
 
-        const activeFeedList = shuffle([...shortPool]);
+        let totalLoaded = 0;
+        function createSlides(count) {
+            const list = shuffle([...shortPool]);
+            list.forEach((id) => {
+                const index = totalLoaded;
+                const slide = document.createElement('div');
+                slide.className = 'short-slide';
+                slide.id = `slide_${index}`;
 
-        function createShortCard(videoId, index) {
-            const slide = document.createElement('div');
-            slide.className = 'short-slide';
-            slide.setAttribute('data-index', index);
-
-            const iframeId = `player_${index}`;
-
-            slide.innerHTML = `
-                <div class="audio-tip" id="tip_${index}">Tap Screen for Sound</div>
-                <div class="video-wrapper">
-                    <!-- Embed arguments specifically tuned to suppress standard controls completely -->
-                    <iframe 
-                        id="${iframeId}"
-                        src="https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&cc_load_policy=0&fs=0"
-                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <div class="touch-overlay" onclick="toggleMute(${index})"></div>
-            `;
-            return slide;
-        }
-
-        function loadInitialFeed() {
-            activeFeedList.forEach((id, idx) => {
-                feed.appendChild(createShortCard(id, idx));
+                slide.innerHTML = `
+                    <div class="audio-tip" id="tip_${index}">Tap Screen for Sound</div>
+                    <div class="video-wrapper">
+                        <div id="player_div_${index}"></div>
+                    </div>
+                    <div class="touch-overlay" onclick="handleVolumeToggle(${index})"></div>
+                `;
+                feed.appendChild(slide);
+                totalLoaded++;
             });
         }
 
-        // Global function handler connected directly onto the raw touch overlay layout frame
-        window.toggleMute = function(index) {
-            const iframe = document.getElementById(`player_${index}`);
+        // Initialize dynamic viewport frame injection
+        createSlides();
+
+        // Standard YT API ready framework loader
+        window.onYouTubeIframeAPIReady = function() {
+            initPlayersForVisibleSlides();
+        };
+
+        function initPlayersForVisibleSlides() {
+            for(let i=0; i < totalLoaded; i++) {
+                const targetDiv = document.getElementById(`player_div_${i}`);
+                if (!targetDiv || players[i]) continue;
+
+                const slideEl = document.getElementById(`slide_${i}`);
+                const videoId = shortPool[i % shortPool.length];
+
+                players[i] = new YT.Player(`player_div_${i}`, {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 0,
+                        controls: 0,
+                        disablekb: 1,
+                        fs: 0,
+                        iv_load_policy: 3,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                        loop: 1,
+                        playlist: videoId,
+                        playsinline: 1,
+                        cc_load_policy: 0
+                    },
+                    events: {
+                        onReady: (event) => {
+                            event.target.mute();
+                            // If it's the very first slide, start playing immediately
+                            if (i === 0) {
+                                event.target.playVideo();
+                            }
+                        }
+                    }
+                });
+            }
+            setupSmartTracking();
+        }
+
+        // Smart Intersection Tracker: Kills previous sound / Starts current view instantly
+        function setupSmartTracking() {
+            const observerOptions = {
+                root: feed,
+                style: null,
+                threshold: 0.6 // Fires when 60% of the slide enters the center viewport screen
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const idx = entry.target.id.split('_')[1];
+                    const player = players[idx];
+
+                    if (player && typeof player.playVideo === 'function') {
+                        if (entry.isIntersecting) {
+                            // Target video is active -> Play
+                            if (isGlobalUnmuted) {
+                                player.unMute();
+                                document.getElementById(`tip_${idx}`).style.opacity = '0';
+                            } else {
+                                player.mute();
+                            }
+                            player.playVideo();
+                        } else {
+                            // Target video is hidden -> Pause instantly to stop sound overlap!
+                            player.pauseVideo();
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.short-slide').forEach(slide => observer.observe(slide));
+        }
+
+        // Handles clean audio toggle state sharing across all tracks
+        window.handleVolumeToggle = function(index) {
+            const player = players[index];
             const tip = document.getElementById(`tip_${index}`);
-            
-            if (iframe && iframe.contentWindow) {
-                // PostMessage event signaling API target toggles natively inside frame structure
-                if (tip.innerText === "Tap Screen for Sound") {
-                    iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                    tip.innerText = "Audio: ON";
-                    setTimeout(() => { tip.style.display = 'none'; }, 1500);
+
+            if (player) {
+                if (!isGlobalUnmuted) {
+                    isGlobalUnmuted = true;
+                    player.unMute();
+                    tip.style.opacity = '0';
+                    // Synchronously update all other cards so they play with audio when scrolled into view
+                    Object.keys(players).forEach(k => {
+                        if(players[k] && k != index) players[k].unMute();
+                        const extraTip = document.getElementById(`tip_${k}`);
+                        if(extraTip) extraTip.style.opacity = '0';
+                    });
                 } else {
-                    iframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
-                    tip.innerText = "Tap Screen for Sound";
-                    tip.style.display = 'block';
+                    isGlobalUnmuted = false;
+                    player.mute();
+                    tip.style.opacity = '1';
+                    tip.innerText = "Muted";
                 }
             }
         };
 
-        // Endless dynamic scroll listener pool expansion
+        // Endless scroll loop generator
         feed.addEventListener('scroll', () => {
-            if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 200) {
-                const currentLength = feed.children.length;
-                const freshShuffledList = shuffle([...shortPool]);
-                
-                freshShuffledList.forEach((id, idx) => {
-                    feed.appendChild(createShortCard(id, currentLength + idx));
-                });
+            if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300) {
+                createSlides();
+                initPlayersForVisibleSlides();
             }
         });
-
-        // Initialize App Feed Loop execution execution
-        loadInitialFeed();
     </script>
 </body>
 </html>
