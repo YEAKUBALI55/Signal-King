@@ -3,214 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Alpha Quantum Scan Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Live Crypto Price Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         
-        /* কালারফুল মডার্ন গ্রাডিয়েন্ট ব্যাকগ্রাউন্ড */
         body { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%); 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); 
             color: #ffffff; 
-            display: flex; 
-            flex-direction: column; 
             min-height: 100vh; 
-            overflow-x: hidden; 
-        }
-        
-        .main-content { 
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top-left-radius: 28px; 
-            border-top-right-radius: 28px; 
-            margin-top: 24px; 
-            padding: 24px 20px 95px 20px; 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-            overflow-y: auto; 
-            height: calc(100vh - 24px); 
-            z-index: 10; 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .global-scanner-bar { 
-            background: rgba(30, 41, 59, 0.7); 
-            backdrop-filter: blur(10px);
-            color: #f8fafc; 
-            padding: 14px 18px; 
-            border-radius: 16px; 
-            font-size: 13px; 
-            font-weight: bold; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2); 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .welcome-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            margin-top: 40px;
-            gap: 12px;
+            padding: 30px 15px;
         }
 
-        .welcome-icon {
-            font-size: 50px;
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
             background: linear-gradient(45deg, #00c853, #00e5ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            animation: pulse 2s infinite alternate;
-        }
-
-        @keyframes pulse {
-            from { transform: scale(1); opacity: 0.8; }
-            to { transform: scale(1.08); opacity: 1; }
-        }
-
-        .welcome-title {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            background: linear-gradient(to right, #ffffff, #cbd5e1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .welcome-subtitle {
-            font-size: 14px;
-            color: #94a3b8;
-            max-width: 280px;
-            line-height: 1.5;
-        }
-
-        .status-glow-badge {
-            margin-top: 8px;
-            background: rgba(0, 200, 83, 0.1);
-            color: #00c853;
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 700;
-            border: 1px solid rgba(0, 200, 83, 0.3);
-            display: inline-flex;
+            display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
         }
 
-        .bottom-nav { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: rgba(15, 23, 42, 0.9); 
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .coin-card {
+            background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(10px);
-            height: 75px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            border-top: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 -8px 32px rgba(0,0,0,0.3); 
-            z-index: 100; 
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
         }
-        
-        .nav-item-center { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            color: #00c853; 
-            font-size: 12px; 
-            font-weight: 700; 
-            gap: 4px; 
+
+        .coin-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        .nav-item-center i { font-size: 22px; }
+
+        .coin-icon {
+            font-size: 24px;
+            color: #f59e0b;
+        }
+
+        .coin-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .coin-pair {
+            font-size: 12px;
+            color: #64748b;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .price-section {
+            text-align: right;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 800;
+            transition: color 0.2s ease;
+        }
+
+        /* Price change flash animation classes */
+        .price-up { color: #00c853; text-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
+        .price-down { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.3); }
     </style>
 </head>
 <body>
 
-    <div class="main-content">
-        <!-- লাইভ স্ক্যানার বার -->
-        <div class="global-scanner-bar">
-            <span><i class="fas fa-microchip fa-spin" style="color: #00c853; margin-right: 6px;"></i> Binance Live Array Stream</span>
-            <span id="active-slot-counter" style="background-color: #00875A; padding: 3px 10px; border-radius: 20px; font-size: 12px;">Slots: 0 / 3</span>
+    <h1><i class="fas fa-chart-line"></i> Live Price Scanner</h1>
+    <p class="subtitle">Real-time crypto prices streaming directly from Binance</p>
+
+    <div class="container">
+        <!-- Bitcoin -->
+        <div class="coin-card" id="card-BTC">
+            <div class="coin-info">
+                <i class="fab fa-bitcoin coin-icon"></i>
+                <div>
+                    <span class="coin-name">Bitcoin</span>
+                    <span class="coin-pair">BTC / USDT</span>
+                </div>
+            </div>
+            <div class="price-section">
+                <div class="price" id="price-BTC">Loading...</div>
+            </div>
         </div>
 
-        <!-- নতুন কালারফুল হোম ইন্টারফেস (কয়েন কার্ডগুলো রিমুভ করা হয়েছে) -->
-        <div class="welcome-container">
-            <div class="welcome-icon">
-                <i class="fas fa-satellite-dish"></i>
+        <!-- Ethereum -->
+        <div class="coin-card" id="card-ETH">
+            <div class="coin-info">
+                <i class="fab fa-ethereum coin-icon" style="color: #a78bfa;"></i>
+                <div>
+                    <span class="coin-name">Ethereum</span>
+                    <span class="coin-pair">ETH / USDT</span>
+                </div>
             </div>
-            <h1 class="welcome-title">SIGNAL KING PRO</h1>
-            <p class="welcome-subtitle">Scanning the crypto horizon. Live algorithms are hunting for high-potential trade entry points...</p>
-            <div class="status-glow-badge">
-                <i class="fas fa-circle fa-fade"></i> System Operational
+            <div class="price-section">
+                <div class="price" id="price-ETH">Loading...</div>
             </div>
         </div>
-    </div>
 
-    <!-- বটম নেভিগেশন বার -->
-    <div class="bottom-nav">
-        <div class="nav-item-center">
-            <i class="fas fa-chart-bar"></i>
-            <span>Signals Scanner</span>
+        <!-- Binance Coin -->
+        <div class="coin-card" id="card-BNB">
+            <div class="coin-info">
+                <i class="fas fa-coins coin-icon" style="color: #facc15;"></i>
+                <div>
+                    <span class="coin-name">BNB</span>
+                    <span class="coin-pair">BNB / USDT</span>
+                </div>
+            </div>
+            <div class="price-section">
+                <div class="price" id="price-BNB">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Solana -->
+        <div class="coin-card" id="card-SOL">
+            <div class="coin-info">
+                <i class="fas fa-bolt coin-icon" style="color: #2dd4bf;"></i>
+                <div>
+                    <span class="coin-name">Solana</span>
+                    <span class="coin-pair">SOL / USDT</span>
+                </div>
+            </div>
+            <div class="price-section">
+                <div class="price" id="price-SOL">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Ripple -->
+        <div class="coin-card" id="card-XRP">
+            <div class="coin-info">
+                <i class="fas fa-circle-nodes coin-icon" style="color: #38bdf8;"></i>
+                <div>
+                    <span class="coin-name">Ripple</span>
+                    <span class="coin-pair">XRP / USDT</span>
+                </div>
+            </div>
+            <div class="price-section">
+                <div class="price" id="price-XRP">Loading...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); tg.ready();
+        // Target coins configuration
+        const coins = ['btc', 'eth', 'bnb', 'sol', 'xrp'];
+        
+        // Generate connection stream link
+        const streams = coins.map(coin => `${coin}usdt@ticker`).join('/');
+        const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+        
+        const ws = new WebSocket(wsUrl);
+        let lastPrices = {};
 
-        const maxSlots = 3;
-        let activeCoins = new Set(JSON.parse(localStorage.getItem('activeCoins') || '[]'));
-        let coinData = JSON.parse(localStorage.getItem('coinData') || '{}');
-
-        function saveStateToStorage() {
-            localStorage.setItem('activeCoins', JSON.stringify(Array.from(activeCoins)));
-            localStorage.setItem('coinData', JSON.stringify(coinData));
-        }
-
-        function updateSlotUIHeader() {
-            const element = document.getElementById('active-slot-counter');
-            if(element) element.innerText = `Slots: ${activeCoins.size} / ${maxSlots}`;
-        }
-
-        // ব্যাকগ্রাউন্ডে স্লট ও ডেটা আপডেট হ্যান্ডল করার জন্য কল করা হয়েছে
-        updateSlotUIHeader();
-
-        // ব্যাকগ্রাউন্ড স্ট্রিমিং সচল রাখার জন্য কানেকশন চালু থাকবে
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            data.forEach(ticker => {
-                if (ticker.s.endsWith('USDT') && !ticker.s.includes('UP') && !ticker.s.includes('DOWN')) {
-                    const coin = ticker.s.replace('USDT', '');
-                    const currentPrice = parseFloat(ticker.c);
-                    const openPrice = parseFloat(ticker.o);
-                    const percentChange = ((currentPrice - openPrice) / openPrice) * 100;
+            const msg = JSON.parse(event.data);
+            const streamName = msg.stream;
+            const data = msg.data;
 
-                    if (!activeCoins.has(coin) && activeCoins.size < maxSlots && Math.abs(percentChange) > 2.5) {
-                        activeCoins.add(coin);
-                        let decimals = currentPrice < 1 ? (currentPrice < 0.01 ? 6 : 4) : 2;
-                        coinData[coin] = {
-                            decimals: decimals,
-                            currentTrackState: 'monitoring_entry',
-                            direction: percentChange > 0 ? 'LONG' : 'SHORT'
-                        };
-                        saveStateToStorage();
-                        updateSlotUIHeader();
+            // Extract uppercase token symbol
+            const coinSymbol = streamName.split('usdt')[0].toUpperCase();
+            const currentPrice = parseFloat(data.c); 
+            
+            const priceEl = document.getElementById(`price-${coinSymbol}`);
+            
+            if (priceEl) {
+                // Formatting decimals dynamically based on value scale
+                let formattedPrice = currentPrice.toLocaleString(undefined, { 
+                    minimumFractionDigits: currentPrice < 2 ? 4 : 2,
+                    maximumFractionDigits: currentPrice < 2 ? 4 : 2 
+                });
+                
+                priceEl.innerText = `$${formattedPrice}`;
+
+                // Contrast comparison logic for color flash indicators
+                if (lastPrices[coinSymbol]) {
+                    if (currentPrice > lastPrices[coinSymbol]) {
+                        priceEl.className = 'price price-up';
+                    } else if (currentPrice < lastPrices[coinSymbol]) {
+                        priceEl.className = 'price price-down';
                     }
                 }
-            });
+
+                // Smoothly reset style class after update interval
+                setTimeout(() => {
+                    priceEl.className = 'price';
+                }, 800);
+
+                // Commit to memory reference
+                lastPrices[coinSymbol] = currentPrice;
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket Error: ", error);
+        };
+
+        ws.onclose = () => {
+            console.log("Stream Disconnected. Reconnecting...");
+            setTimeout(() => { location.reload(); }, 5000);
         };
     </script>
 </body>
