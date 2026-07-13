@@ -2,64 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Live Satellite View</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live GPS Tracker</title>
     <style>
-        /* Force full screen, no scrollbars */
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
-        }
-
-        /* Full screen iframe wrapper */
-        .satellite-wrapper {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        /* The actual view - embedding the high-res interactive globe */
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* Minimal Overlay for a premium look */
-        .ui-overlay {
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; }
+        #map { height: 100%; width: 100%; }
+        .location-info {
             position: absolute;
-            top: 20px;
+            bottom: 20px;
             left: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px 15px;
-            border-radius: 8px;
-            color: white;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00f2fe;
+            padding: 15px;
+            border-radius: 15px;
             font-family: sans-serif;
-            border-left: 3px solid #00f2fe;
-            pointer-events: none;
+            text-align: center;
+            border: 2px solid #ff007f;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="satellite-wrapper">
-        <div class="ui-overlay">
-            <div style="font-size: 10px; opacity: 0.8;">LIVE FEED</div>
-            <div style="font-weight: bold; letter-spacing: 1px;">SATELLITE MAPPING</div>
-        </div>
+    <div id="map"></div>
+    <div class="location-info" id="locationName">Loading Location...</div>
 
-        <!-- Embedding NASA/Google Earth View optimized for full screen -->
-        <iframe 
-            src="https://earth.google.com/web/@22.5726,88.3639,10a,800d,30y,0h,0t,0r/data=OgMKATA" 
-            allowfullscreen>
-        </iframe>
-    </div>
+    <!-- Google Maps Script -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
 
+    <script>
+        let map, marker, geocoder;
+
+        function initMap() {
+            geocoder = new google.maps.Geocoder();
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 18,
+                center: { lat: 0, lng: 0 },
+                disableDefaultUI: true
+            });
+
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition((position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    // ম্যাপ মুভ করা
+                    map.setCenter(pos);
+                    if (!marker) {
+                        marker = new google.maps.Marker({ position: pos, map: map, title: "You" });
+                    } else {
+                        marker.setPosition(pos);
+                    }
+
+                    // জায়গার নাম বের করা
+                    geocoder.geocode({ 'location': pos }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            document.getElementById('locationName').innerText = "Current Place: " + results[0].formatted_address;
+                        }
+                    });
+
+                }, () => alert("GPS Permission Denied"), { enableHighAccuracy: true });
+            }
+        }
+    </script>
 </body>
 </html>
