@@ -111,6 +111,7 @@
     </div>
 
     <script>
+        // Binance high volume market coins list
         const targetCoins = [
             'BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','SHIB','AVAX','LINK','LTC','MATIC','UNI','BCH',
             'FIL','XLM','ATOM','ETC','HBAR','ICP','GRT','AAVE','NEAR','ALGO','QNT','FLOW','EGLD','SAND','MANA',
@@ -118,11 +119,9 @@
         ];
 
         const MAX_COINS = 5;
-        let activeStreams = [];
         let lastPrices = {};
-        let ws;
+        let sockets = []; // Store multiple live socket references
 
-        // Get today's date string (YYYY-MM-DD)
         function getTodayDateString() {
             const d = new Date();
             return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
@@ -158,7 +157,7 @@
             return false;
         }
 
-        // 2. Inject Coin Card to DOM
+        // 2. Inject Coin Card & Instantly Initialize Dedicated Live Streaming Stream
         function createCoinCard(coin) {
             const container = document.getElementById('dashboard-container');
             
@@ -180,76 +179,75 @@
                 </div>
             `;
             container.appendChild(card);
-            if (!activeStreams.includes(coin.toLowerCase())) {
-                activeStreams.push(coin.toLowerCase());
-            }
+            
+            // Connect dedicated individual stream for this specific card to prevent congestion bugs
+            connectIndividualStream(coin);
         }
 
-        // 3. Establish Live WebSocket Connection
-        function startLiveStreaming() {
-            if(activeStreams.length === 0) {
-                document.getElementById('status-text').innerText = "0 coins found matching the setup today.";
-                return;
-            }
-
-            document.getElementById('status-text').style.display = 'none';
-
-            const streams = activeStreams.map(coin => `${coin}usdt@ticker`).join('/');
-            const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
-            
-            ws = new WebSocket(wsUrl);
+        // 3. Robust Individual Stream Connector Engine
+        function connectIndividualStream(coin) {
+            const coinLower = coin.toLowerCase();
+            const wsUrl = `wss://stream.binance.com:9443/ws/${coinLower}usdt@ticker`;
+            const ws = new WebSocket(wsUrl);
+            sockets.push(ws);
 
             ws.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
-                const coinSymbol = msg.stream.split('usdt')[0].toUpperCase();
-                const currentPrice = parseFloat(msg.data.c); 
+                const currentPrice = parseFloat(msg.c); 
+                const priceEl = document.getElementById(`price-${coin}`);
                 
-                const priceEl = document.getElementById(`price-${coinSymbol}`);
                 if (priceEl) {
+                    // Dynamically set decimal places based on price size
+                    let decimalPlaces = currentPrice < 1 ? 4 : (currentPrice < 10 ? 3 : 2);
                     let formattedPrice = currentPrice.toLocaleString(undefined, { 
-                        minimumFractionDigits: currentPrice < 2 ? 4 : 2,
-                        maximumFractionDigits: currentPrice < 2 ? 4 : 2 
+                        minimumFractionDigits: decimalPlaces,
+                        maximumFractionDigits: decimalPlaces 
                     });
                     
                     priceEl.innerText = `$${formattedPrice}`;
 
-                    if (lastPrices[coinSymbol]) {
-                        if (currentPrice > lastPrices[coinSymbol]) {
+                    // Dynamic price direction color flash system
+                    if (lastPrices[coin]) {
+                        if (currentPrice > lastPrices[coin]) {
                             priceEl.className = 'price price-up';
-                        } else if (currentPrice < lastPrices[coinSymbol]) {
+                        } else if (currentPrice < lastPrices[coin]) {
                             priceEl.className = 'price price-down';
                         }
                     }
 
                     setTimeout(() => { priceEl.className = 'price'; }, 800);
-                    lastPrices[coinSymbol] = currentPrice;
+                    lastPrices[coin] = currentPrice;
                 }
+            };
+
+            // Individual auto reconnect fallbacks
+            ws.onclose = () => {
+                setTimeout(() => { connectIndividualStream(coin); }, 3000);
+            };
+            ws.onerror = () => {
+                ws.close();
             };
         }
 
-        // Master Control with LocalStorage Memory Protection
+        // Master Controller Routine
         async function initScanner() {
             const savedDate = localStorage.getItem('scan_date');
             const currentDate = getTodayDateString();
             let savedCoins = JSON.parse(localStorage.getItem('matched_coins')) || [];
 
-            // If the date has changed, clear old memory cache completely
             if (savedDate !== currentDate) {
                 localStorage.removeItem('matched_coins');
                 localStorage.setItem('scan_date', currentDate);
                 savedCoins = [];
             }
 
-            // Scenario 1: Load from existing day storage without re-scanning
             if (savedCoins.length > 0) {
-                document.getElementById('status-text').innerText = "Loading today's locked coins...";
+                document.getElementById('status-text').style.display = 'none';
                 savedCoins.forEach(coin => {
                     createCoinCard(coin);
                 });
-            } 
-            // Scenario 2: Fresh Day Scan Routine
-            else {
-                document.getElementById('status-text').innerText = "New Date Detected. Scanning fresh setups (Max 5)...";
+            } else {
+                document.getElementById('status-text').innerText = "New Date. Scanning setups (Max 5)...";
                 let matchedCount = 0;
                 let temporaryMatches = [];
 
@@ -262,18 +260,19 @@
                         temporaryMatches.push(coin);
                         matchedCount++;
                     }
-                    await new Promise(resolve => setTimeout(resolve, 50)); 
+                    await new Promise(resolve => setTimeout(resolve, 60)); 
                 }
 
-                // Lock these coins in database memory for the rest of the day
+                if(temporaryMatches.length > 0) {
+                    document.getElementById('status-text').style.display = 'none';
+                } else {
+                    document.getElementById('status-text').innerText = "0 coins found matching setup today.";
+                }
+
                 localStorage.setItem('matched_coins', JSON.stringify(temporaryMatches));
             }
-            
-            // Activate Live Engine
-            startLiveStreaming();
         }
 
-        // Run system
         initScanner();
     </script>
 </body>
