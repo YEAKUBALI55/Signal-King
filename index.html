@@ -3,64 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Funny Baby Dance Live</title>
+    <title>Live Crypto Market Pulse</title>
+    <!-- Lightweight Charts Library for ultra-smooth rendering -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: #0b0e11; 
+            overflow: hidden; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-
-        /* Full screen video container */
-        .dance-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #000;
-        }
-
-        /* Force video to cover the screen perfectly */
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Overlay for "Live" indicator */
-        .live-badge {
+        
+        #chart { width: 100%; height: 100vh; }
+        
+        /* Unique minimalist corner selector */
+        .controls {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-family: sans-serif;
-            font-weight: bold;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        
+        select {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            border: 1px solid #4facfe;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
             font-size: 12px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            outline: none;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
 <body>
 
-    <div class="dance-container">
-        <div class="live-badge">Live Feed</div>
-        <!-- High quality funny baby dance loop -->
-        <video 
-            src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbmV4dGZ4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.mp4" 
-            autoplay 
-            loop 
-            muted 
-            playsinline>
-        </video>
+    <div class="controls">
+        <select id="pairSelect" onchange="changePair()">
+            <option value="btcusdt">BTC / USDT</option>
+            <option value="ethusdt">ETH / USDT</option>
+            <option value="solusdt">SOL / USDT</option>
+            <option value="bnbusdt">BNB / USDT</option>
+        </select>
     </div>
+    
+    <div id="chart"></div>
 
+    <script>
+        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+            layout: { background: { color: '#0b0e11' }, textColor: '#848e9c' },
+            grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            timeScale: { timeVisible: true, secondsVisible: true },
+        });
+
+        const candleSeries = chart.addCandlestickSeries({
+            upColor: '#0ecb81', downColor: '#f6465d',
+            borderVisible: false, wickUpColor: '#0ecb81', wickDownColor: '#f6465d'
+        });
+
+        let ws;
+
+        function connectWS(pair) {
+            if (ws) ws.close();
+            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@kline_1m`);
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                const kline = message.k;
+                candleSeries.update({
+                    time: kline.t / 1000,
+                    open: parseFloat(kline.o),
+                    high: parseFloat(kline.h),
+                    low: parseFloat(kline.l),
+                    close: parseFloat(kline.c),
+                });
+            };
+        }
+
+        function changePair() {
+            const pair = document.getElementById('pairSelect').value;
+            // Clear current chart data for clean transition
+            candleSeries.setData([]); 
+            connectWS(pair);
+        }
+
+        // Initialize with default pair
+        connectWS('btcusdt');
+    </script>
 </body>
 </html>
