@@ -2,55 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Map Tracker</title>
-    <!-- Using Leaflet for free, unlimited mapping -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Funny Baby Dance Live</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; }
-        #map { height: 100vh; width: 100vw; }
-        .info {
-            position: absolute; bottom: 20px; left: 10px; right: 10px;
-            background: rgba(0,0,0,0.8); color: #00f2fe; padding: 15px;
-            border-radius: 10px; text-align: center; z-index: 1000;
-            font-family: sans-serif; font-weight: bold;
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        /* Full screen video container */
+        .dance-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        /* Force video to cover the screen perfectly */
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Overlay for "Live" indicator */
+        .live-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <div id="map"></div>
-    <div class="info" id="status">Connecting to GPS...</div>
+    <div class="dance-container">
+        <div class="live-badge">Live Feed</div>
+        <!-- High quality funny baby dance loop -->
+        <video 
+            src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqbmV4dGZ4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKVUn7iM8FMEU24/giphy.mp4" 
+            autoplay 
+            loop 
+            muted 
+            playsinline>
+        </video>
+    </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Initialize the map
-        const map = L.map('map').setView([0, 0], 2);
-        
-        // Add map tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // Add a marker
-        const marker = L.marker([0, 0]).addTo(map);
-
-        // Track live location
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition((pos) => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                
-                map.setView([lat, lng], 17); // Zoom level 17 for street view
-                marker.setLatLng([lat, lng]);
-                
-                document.getElementById('status').innerText = "Live Location Active";
-            }, (err) => {
-                document.getElementById('status').innerText = "GPS Error: Please enable Location Permissions";
-            }, { enableHighAccuracy: true });
-        } else {
-            document.getElementById('status').innerText = "Geolocation not supported";
-        }
-    </script>
 </body>
 </html>
