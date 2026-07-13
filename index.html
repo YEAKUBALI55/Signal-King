@@ -2,99 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Live Crypto Market Pulse</title>
-    <!-- Lightweight Charts Library for ultra-smooth rendering -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Chart</title>
     <style>
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: #0b0e11; 
-            overflow: hidden; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-        
-        #chart { width: 100%; height: 100vh; }
-        
-        /* Unique minimalist corner selector */
-        .controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 10;
-        }
-        
-        select {
-            background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            border: 1px solid #4facfe;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 12px;
-            outline: none;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0b0e11; overflow: hidden; }
+        #tradingview-widget-container { width: 100%; height: 100vh; }
     </style>
 </head>
 <body>
 
-    <div class="controls">
-        <select id="pairSelect" onchange="changePair()">
-            <option value="btcusdt">BTC / USDT</option>
-            <option value="ethusdt">ETH / USDT</option>
-            <option value="solusdt">SOL / USDT</option>
-            <option value="bnbusdt">BNB / USDT</option>
-        </select>
-    </div>
-    
-    <div id="chart"></div>
+    <div id="tradingview-widget-container"></div>
 
-    <script>
-        const chart = LightweightCharts.createChart(document.getElementById('chart'), {
-            layout: { background: { color: '#0b0e11' }, textColor: '#848e9c' },
-            grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-            timeScale: { timeVisible: true, secondsVisible: true },
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+        new TradingView.widget({
+            "container_id": "tradingview-widget-container",
+            "symbol": "BINANCE:BTCUSDT",
+            "theme": "dark",
+            "interval": "1",
+            "timezone": "Etc/UTC",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": true,
+            "hide_legend": true,
+            "save_image": false,
+            "autosize": true
         });
-
-        const candleSeries = chart.addCandlestickSeries({
-            upColor: '#0ecb81', downColor: '#f6465d',
-            borderVisible: false, wickUpColor: '#0ecb81', wickDownColor: '#f6465d'
-        });
-
-        let ws;
-
-        function connectWS(pair) {
-            if (ws) ws.close();
-            ws = new WebSocket(`wss://stream.binance.com:9443/ws/${pair}@kline_1m`);
-            
-            ws.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                const kline = message.k;
-                candleSeries.update({
-                    time: kline.t / 1000,
-                    open: parseFloat(kline.o),
-                    high: parseFloat(kline.h),
-                    low: parseFloat(kline.l),
-                    close: parseFloat(kline.c),
-                });
-            };
-        }
-
-        function changePair() {
-            const pair = document.getElementById('pairSelect').value;
-            // Clear current chart data for clean transition
-            candleSeries.setData([]); 
-            connectWS(pair);
-        }
-
-        // Initialize with default pair
-        connectWS('btcusdt');
     </script>
 </body>
 </html>
