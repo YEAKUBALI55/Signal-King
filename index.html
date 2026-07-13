@@ -3,69 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live GPS Tracker</title>
+    <title>Live Map Tracker</title>
+    <!-- Using Leaflet for free, unlimited mapping -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; }
-        #map { height: 100%; width: 100%; }
-        .location-info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #00f2fe;
-            padding: 15px;
-            border-radius: 15px;
-            font-family: sans-serif;
-            text-align: center;
-            border: 2px solid #ff007f;
-            z-index: 10;
+        #map { height: 100vh; width: 100vw; }
+        .info {
+            position: absolute; bottom: 20px; left: 10px; right: 10px;
+            background: rgba(0,0,0,0.8); color: #00f2fe; padding: 15px;
+            border-radius: 10px; text-align: center; z-index: 1000;
+            font-family: sans-serif; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
-    <div class="location-info" id="locationName">Loading Location...</div>
+    <div class="info" id="status">Connecting to GPS...</div>
 
-    <!-- Google Maps Script -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map, marker, geocoder;
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2);
+        
+        // Add map tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        function initMap() {
-            geocoder = new google.maps.Geocoder();
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 18,
-                center: { lat: 0, lng: 0 },
-                disableDefaultUI: true
-            });
+        // Add a marker
+        const marker = L.marker([0, 0]).addTo(map);
 
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition((position) => {
-                    const pos = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-
-                    // ম্যাপ মুভ করা
-                    map.setCenter(pos);
-                    if (!marker) {
-                        marker = new google.maps.Marker({ position: pos, map: map, title: "You" });
-                    } else {
-                        marker.setPosition(pos);
-                    }
-
-                    // জায়গার নাম বের করা
-                    geocoder.geocode({ 'location': pos }, (results, status) => {
-                        if (status === 'OK' && results[0]) {
-                            document.getElementById('locationName').innerText = "Current Place: " + results[0].formatted_address;
-                        }
-                    });
-
-                }, () => alert("GPS Permission Denied"), { enableHighAccuracy: true });
-            }
+        // Track live location
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                map.setView([lat, lng], 17); // Zoom level 17 for street view
+                marker.setLatLng([lat, lng]);
+                
+                document.getElementById('status').innerText = "Live Location Active";
+            }, (err) => {
+                document.getElementById('status').innerText = "GPS Error: Please enable Location Permissions";
+            }, { enableHighAccuracy: true });
+        } else {
+            document.getElementById('status').innerText = "Geolocation not supported";
         }
     </script>
 </body>
