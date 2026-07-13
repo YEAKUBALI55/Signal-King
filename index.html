@@ -11,51 +11,36 @@
         body { 
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); 
             color: #ffffff; 
-            min-height: 100vh; 
+            height: 100vh;
+            width: 100vw;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 40px 15px;
+            padding: 12px;
+            overflow: hidden;
         }
 
-        h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(45deg, #00c853, #00e5ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        p.subtitle {
-            color: #94a3b8;
-            font-size: 16px;
-            margin-bottom: 30px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        /* Gradient Glowing Border wrapper for the home dashboard */
+        /* Full-screen Gradient Glowing Border wrapper */
         .gradient-border-box {
             width: 100%;
-            max-width: 500px;
+            height: 100%;
             background: linear-gradient(45deg, #00c853, #00e5ff, #a78bfa, #ff3d00);
             padding: 3px; /* Controls border thickness */
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 200, 83, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 200, 83, 0.2);
+            display: flex;
         }
 
         .container {
             width: 100%;
-            background: #0f172a; /* Solid background inside the container */
-            border-radius: 17px;
-            padding: 24px 16px;
+            height: 100%;
+            background: #0f172a; /* Solid interior background */
+            border-radius: 21px;
+            padding: 20px 16px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            justify-content: space-around; /* Distributes slots evenly in full screen */
+            gap: 12px;
         }
 
         .coin-card {
@@ -64,21 +49,23 @@
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
-            padding: 18px 20px;
+            padding: 0 20px;
+            flex: 1; /* Makes cards equal height filling up the screen */
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: all 0.3s ease;
+            max-height: 18%; /* Controls proportional distribution */
         }
 
         .coin-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .coin-icon {
-            font-size: 24px;
+            font-size: 26px;
             color: #f59e0b;
         }
 
@@ -100,7 +87,7 @@
         }
 
         .price {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             transition: color 0.2s ease;
         }
@@ -112,10 +99,7 @@
 </head>
 <body>
 
-    <h1><i class="fas fa-chart-line"></i> YEAKUB - BINANCE</h1>
-    <p class="subtitle">ইয়াকুবের জন্য বেস্ট কয়েন</p>
-
-    <!-- Glowing Colorful Wrapper Box Around The Dashboard -->
+    <!-- Full screen container with modern neon framing -->
     <div class="gradient-border-box">
         <div class="container">
             <!-- Bitcoin -->
@@ -191,10 +175,8 @@
     </div>
 
     <script>
-        // Target coins configuration
         const coins = ['btc', 'eth', 'bnb', 'sol', 'xrp'];
         
-        // Generate connection stream link
         const streams = coins.map(coin => `${coin}usdt@ticker`).join('/');
         const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
         
@@ -206,14 +188,12 @@
             const streamName = msg.stream;
             const data = msg.data;
 
-            // Extract uppercase token symbol
             const coinSymbol = streamName.split('usdt')[0].toUpperCase();
             const currentPrice = parseFloat(data.c); 
             
             const priceEl = document.getElementById(`price-${coinSymbol}`);
             
             if (priceEl) {
-                // Formatting decimals dynamically based on value scale
                 let formattedPrice = currentPrice.toLocaleString(undefined, { 
                     minimumFractionDigits: currentPrice < 2 ? 4 : 2,
                     maximumFractionDigits: currentPrice < 2 ? 4 : 2 
@@ -221,7 +201,6 @@
                 
                 priceEl.innerText = `$${formattedPrice}`;
 
-                // Contrast comparison logic for color flash indicators
                 if (lastPrices[coinSymbol]) {
                     if (currentPrice > lastPrices[coinSymbol]) {
                         priceEl.className = 'price price-up';
@@ -230,12 +209,10 @@
                     }
                 }
 
-                // Smoothly reset style class after update interval
                 setTimeout(() => {
                     priceEl.className = 'price';
                 }, 800);
 
-                // Commit to memory reference
                 lastPrices[coinSymbol] = currentPrice;
             }
         };
