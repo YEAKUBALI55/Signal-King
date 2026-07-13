@@ -39,7 +39,7 @@
         .change-down { color: #ff3d00; }
 
         .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; }
-        .level-box { padding: 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+        .level-box { padding: 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; }
         .box-entry { background-color: #00c853; }
         .box-target { background-color: #2962ff; }
         .box-stop { background-color: #ff3d00; }
@@ -59,8 +59,6 @@
         .nav-item-center i { font-size: 22px; }
 
         .global-scanner-bar { background-color: #1e293b; color: #f8fafc; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-        #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -80,8 +78,6 @@
             <span>Signals Scanner</span>
         </div>
     </div>
-    
-    <div id="toast">Value copied!</div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -218,18 +214,18 @@
                         <div class="price-change" id="change-${coin}">${prefix(percentChange)}${percentChange.toFixed(2)}%</div>
                     </div>
                     <div class="levels-grid">
-                        <div class="level-box box-entry" id="box-entry-${coin}" onclick="copyValue('${coin}_entry')">
+                        <div class="level-box box-entry" id="box-entry-${coin}">
                             <span class="level-title">Optimum Entry</span><span class="level-value" id="entry-${coin}">${c.entryVal.toFixed(c.decimals)}</span>
                         </div>
-                        <div class="level-box box-target" id="box-t1-${coin}" onclick="copyValue('${coin}_target1')">
+                        <div class="level-box box-target" id="box-t1-${coin}">
                             <span class="level-title">T1 <span class="percent-badge" id="p-t1-${coin}">${prefix(calcPct(c.t1Val))}${calcPct(c.t1Val)}%</span></span>
                             <span class="level-value" id="target1-${coin}">${c.t1Val.toFixed(c.decimals)}</span>
                         </div>
-                        <div class="level-box box-target" id="box-t2-${coin}" onclick="copyValue('${coin}_target2')" style="background-color: #0288d1;">
+                        <div class="level-box box-target" id="box-t2-${coin}" style="background-color: #0288d1;">
                             <span class="level-title">T2 <span class="percent-badge" id="p-t2-${coin}">${prefix(calcPct(c.t2Val))}${calcPct(c.t2Val)}%</span></span>
                             <span class="level-value" id="target2-${coin}">${c.t2Val.toFixed(c.decimals)}</span>
                         </div>
-                        <div class="level-box box-stop" id="box-sl-${coin}" onclick="copyValue('${coin}_stop')">
+                        <div class="level-box box-stop" id="box-sl-${coin}">
                             <span class="level-title">SL <span class="percent-badge" id="p-sl-${coin}">${calcPct(c.slVal)}%</span></span>
                             <span class="level-value" id="stop-${coin}">${c.slVal.toFixed(c.decimals)}</span>
                         </div>
@@ -338,20 +334,6 @@
         function updateSlotUIHeader() {
             const element = document.getElementById('active-slot-counter');
             if(element) element.innerText = `Slots: ${activeCoins.size} / ${maxSlots}`;
-        }
-
-        function copyValue(id) {
-            const el = document.getElementById(id.replace('_', '-'));
-            if(!el) return;
-            const val = el.innerText;
-            if (val !== '--' && val !== 'Loading...') {
-                navigator.clipboard.writeText(val);
-                const toast = document.getElementById('toast');
-                toast.innerText = `Copied Target Value: ${val}`;
-                toast.style.opacity = '1';
-                setTimeout(() => toast.style.opacity = '0', 2000);
-                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
-            }
         }
     </script>
 </body>
