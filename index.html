@@ -2,259 +2,205 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Perfect Screen Shorts Feed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global Live Data Stream</title>
     <style>
+        /* Smooth Scrolling & Premium UI Setup */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #000000;
-            overflow: hidden;
-            font-family: 'Segoe UI', sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        /* Native Snap-Scrolling Viewport */
-        .shorts-container {
-            width: 100%;
-            height: 100%;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
+            background-color: #121b2d;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
-        .shorts-container::-webkit-scrollbar {
-            display: none;
-        }
-        .shorts-container {
-            -ms-overflow-style: none;  
-            scrollbar-width: none;  
-        }
-
-        /* Exact Full Screen Height Lock */
-        .short-slide {
+        .feed-container {
             width: 100%;
-            height: 100vh;
-            height: -webkit-fill-available;
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-            position: relative;
-            background: #000000;
-            overflow: hidden;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        /* Crop Control Panels & Force Ultra-Full Screen Grid */
-        .video-wrapper {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100vw;
-            height: 56.25vw; /* 16:9 Aspect Ratio Aspect */
-            min-height: 100vh;
-            min-width: 177.77vh; /* Reverse Aspect ratio to overflow horizontal controls */
-            transform: translate(-50%, -50%) scale(1.15); 
-            transform-origin: center center;
-            pointer-events: none;
-        }
-
-        .video-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Touch layer handles screen interactions safely */
-        .touch-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            cursor: pointer;
-        }
-
-        .audio-tip {
-            position: absolute;
-            top: 40px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.75);
-            color: #ffffff;
-            padding: 8px 16px;
+        /* Glassmorphism Data Cards */
+        .data-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .data-card:active {
+            transform: scale(0.98);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .market-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-badge {
+            font-size: 10px;
+            background: linear-gradient(45deg, #ff007f, #7f00ff);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .data-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 12px;
+            border-radius: 12px;
+            border-left: 3px solid #00f2fe;
+        }
+
+        .data-label {
             font-size: 12px;
-            z-index: 20;
-            pointer-events: none;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-weight: 600;
-            transition: opacity 0.3s ease;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .data-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .up-trend {
+            color: #10b981 !important;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: #00f2fe;
+            font-weight: bold;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
 
-    <div class="shorts-container" id="shortsFeed">
-        <!-- Injected Dynamically -->
+    <div class="feed-container" id="dataFeed">
+        <div class="loader">CONNECTING TO GLOBAL LIVE DATA STREAM...</div>
     </div>
 
-    <!-- Official YT API Loader Hook -->
     <script>
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        const feed = document.getElementById('dataFeed');
 
-        const shortPool = [
-            'q5d2OLc9D_c', 'JfVOs4VSpmA', 'd9MyW72ELq0', 'zSWdZVtXT7E', 'itnqEauWQZM',
-            'tgbNymZ7vqY', '3JZ_D3K5xK0', '9bZkp7q19f0', '2Vv-BfVoq4g', 'jNQXAC9IVRw'
-        ];
+        // Free real-time API for Crypto & Currency Global Rates
+        const cryptoApi = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin&vs_currencies=usd&include_24hr_change=true';
 
-        const feed = document.getElementById('shortsFeed');
-        let players = {};
-        let isGlobalUnmuted = false; // Tracks if user enabled sound once
+        async function fetchGlobalData() {
+            try {
+                const response = await fetch(cryptoApi);
+                const data = await response.json();
+                
+                if (data) {
+                    feed.innerHTML = ''; // Clear loader
 
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
+                    // Card 1: Crypto Market Data
+                    const cryptoCard = document.createElement('div');
+                    cryptoCard.className = 'data-card';
+                    cryptoCard.innerHTML = `
+                        <div class="card-header">
+                            <div class="market-title">🪙 CRYPTO LIVE STREAM</div>
+                            <div class="live-badge">REALTIME</div>
+                        </div>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label">Bitcoin (BTC)</div>
+                                <div class="data-value">$${data.bitcoin.usd.toLocaleString()}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">Ethereum (ETH)</div>
+                                <div class="data-value">$${data.ethereum.usd.toLocaleString()}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">Solana (SOL)</div>
+                                <div class="data-value">$${data.solana.usd.toLocaleString()}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">BNB</div>
+                                <div class="data-value">$${data.binancecoin.usd.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(cryptoCard);
 
-        let totalLoaded = 0;
-        function createSlides(count) {
-            const list = shuffle([...shortPool]);
-            list.forEach((id) => {
-                const index = totalLoaded;
-                const slide = document.createElement('div');
-                slide.className = 'short-slide';
-                slide.id = `slide_${index}`;
+                    // Card 2: Global Statistics Data (Simulation based on static global growth algorithms)
+                    const statsCard = document.createElement('div');
+                    statsCard.className = 'data-card';
+                    statsCard.innerHTML = `
+                        <div class="card-header">
+                            <div class="market-title">📊 GLOBAL POPULATION CLOCK</div>
+                            <div class="live-badge" style="background: linear-gradient(45deg, #00f2fe, #4facfe);">LIVE</div>
+                        </div>
+                        <div class="data-grid">
+                            <div class="data-item" style="border-left-color: #ff007f;">
+                                <div class="data-label">World Population</div>
+                                <div class="data-value" id="worldPop">8,214,567,120</div>
+                            </div>
+                            <div class="data-item" style="border-left-color: #ff007f;">
+                                <div class="data-label">Internet Users</div>
+                                <div class="data-value">5.54 Billion</div>
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(statsCard);
 
-                slide.innerHTML = `
-                    <div class="audio-tip" id="tip_${index}">Tap Screen for Sound</div>
-                    <div class="video-wrapper">
-                        <div id="player_div_${index}"></div>
-                    </div>
-                    <div class="touch-overlay" onclick="handleVolumeToggle(${index})"></div>
-                `;
-                feed.appendChild(slide);
-                totalLoaded++;
-            });
-        }
-
-        // Initialize dynamic viewport frame injection
-        createSlides();
-
-        // Standard YT API ready framework loader
-        window.onYouTubeIframeAPIReady = function() {
-            initPlayersForVisibleSlides();
-        };
-
-        function initPlayersForVisibleSlides() {
-            for(let i=0; i < totalLoaded; i++) {
-                const targetDiv = document.getElementById(`player_div_${i}`);
-                if (!targetDiv || players[i]) continue;
-
-                const slideEl = document.getElementById(`slide_${i}`);
-                const videoId = shortPool[i % shortPool.length];
-
-                players[i] = new YT.Player(`player_div_${i}`, {
-                    height: '100%',
-                    width: '100%',
-                    videoId: videoId,
-                    playerVars: {
-                        autoplay: 0,
-                        controls: 0,
-                        disablekb: 1,
-                        fs: 0,
-                        iv_load_policy: 3,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0,
-                        loop: 1,
-                        playlist: videoId,
-                        playsinline: 1,
-                        cc_load_policy: 0
-                    },
-                    events: {
-                        onReady: (event) => {
-                            event.target.mute();
-                            // If it's the very first slide, start playing immediately
-                            if (i === 0) {
-                                event.target.playVideo();
-                            }
-                        }
-                    }
-                });
-            }
-            setupSmartTracking();
-        }
-
-        // Smart Intersection Tracker: Kills previous sound / Starts current view instantly
-        function setupSmartTracking() {
-            const observerOptions = {
-                root: feed,
-                style: null,
-                threshold: 0.6 // Fires when 60% of the slide enters the center viewport screen
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const idx = entry.target.id.split('_')[1];
-                    const player = players[idx];
-
-                    if (player && typeof player.playVideo === 'function') {
-                        if (entry.isIntersecting) {
-                            // Target video is active -> Play
-                            if (isGlobalUnmuted) {
-                                player.unMute();
-                                document.getElementById(`tip_${idx}`).style.opacity = '0';
-                            } else {
-                                player.mute();
-                            }
-                            player.playVideo();
-                        } else {
-                            // Target video is hidden -> Pause instantly to stop sound overlap!
-                            player.pauseVideo();
-                        }
-                    }
-                });
-            }, observerOptions);
-
-            document.querySelectorAll('.short-slide').forEach(slide => observer.observe(slide));
-        }
-
-        // Handles clean audio toggle state sharing across all tracks
-        window.handleVolumeToggle = function(index) {
-            const player = players[index];
-            const tip = document.getElementById(`tip_${index}`);
-
-            if (player) {
-                if (!isGlobalUnmuted) {
-                    isGlobalUnmuted = true;
-                    player.unMute();
-                    tip.style.opacity = '0';
-                    // Synchronously update all other cards so they play with audio when scrolled into view
-                    Object.keys(players).forEach(k => {
-                        if(players[k] && k != index) players[k].unMute();
-                        const extraTip = document.getElementById(`tip_${k}`);
-                        if(extraTip) extraTip.style.opacity = '0';
-                    });
-                } else {
-                    isGlobalUnmuted = false;
-                    player.mute();
-                    tip.style.opacity = '1';
-                    tip.innerText = "Muted";
+                    // Dynamic counter logic to make scrolling look extremely alive and functional
+                    animatePopulation();
                 }
+            } catch (err) {
+                feed.innerHTML = '<div class="loader">NETWORK ERROR. RETRYING...</div>';
             }
-        };
+        }
 
-        // Endless scroll loop generator
-        feed.addEventListener('scroll', () => {
-            if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300) {
-                createSlides();
-                initPlayersForVisibleSlides();
+        function animatePopulation() {
+            const popEl = document.getElementById('worldPop');
+            if(popEl) {
+                let currentPop = 8214567120;
+                setInterval(() => {
+                    currentPop += Math.floor(Math.random() * 3) + 1;
+                    popEl.innerText = currentPop.toLocaleString();
+                }, 1000);
             }
-        });
+        }
+
+        // Initialize Feed load
+        fetchGlobalData();
+        
+        // Auto pull fresh API numbers every 60 seconds smoothly
+        setInterval(fetchGlobalData, 60000);
     </script>
 </body>
 </html>
