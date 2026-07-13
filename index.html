@@ -2,247 +2,125 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hollywood Hindi Dubbed Movies</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unlimited YouTube Shorts Feed</title>
     <style>
-        /* Matches your app's main dark blue background color */
-        body {
-            background-color: #121b2d;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Lock down scroll mechanics for a native app feel */
+        html, body {
             margin: 0;
-            padding: 12px;
-            box-sizing: border-box;
-        }
-
-        /* Glowing RGB Border Container */
-        .app-container {
+            padding: 0;
             width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            background: rgba(18, 27, 45, 0.95);
-            border-radius: 20px;
-            padding: 16px;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
-            border: 2px solid transparent;
-            border-image: linear-gradient(to bottom right, #ff007f, #7f00ff, #00f2fe, #4facfe) 1;
-            box-sizing: border-box;
-        }
-
-        .header-title {
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: linear-gradient(45deg, #ff007f, #00f2fe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Movie Card Grid Layout */
-        .movies-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .movie-card {
-            display: flex;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+            height: 100%;
+            background-color: #121b2d; /* Matches your core app background */
             overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            border-left: 4px solid #ff007f;
+            font-family: 'Segoe UI', sans-serif;
         }
 
-        .movie-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: scale(1.02);
+        /* Native-like vertical snap-scrolling container */
+        .shorts-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
         }
 
-        .movie-poster {
-            width: 90px;
-            height: 120px;
-            object-fit: cover;
-            background-color: #1e293b;
-        }
-
-        .movie-info {
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-        }
-
-        .movie-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin: 0 0 6px 0;
-            color: #f1f5f9;
-        }
-
-        .movie-tags {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-bottom: 8px;
-        }
-
-        .play-btn {
-            align-self: flex-start;
-            background: linear-gradient(45deg, #00f2fe, #4facfe);
-            color: #121b2d;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 6px 14px;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-
-        /* Full Screen In-App Video Modal Player */
-        .video-modal {
+        /* Hide scrollbars completely across all mobile platforms */
+        .shorts-container::-webkit-scrollbar {
             display: none;
-            position: fixed;
+        }
+        .shorts-container {
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
+        }
+
+        /* Full UI Single Video wrapper */
+        .short-slide {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            background: #000000;
+        }
+
+        /* Absolute full screen viewport scaling without borders */
+        .short-slide iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
             top: 0;
             left: 0;
+        }
+
+        /* Subtle RGB bottom layout indicator to seamlessly match app look */
+        .bottom-border-accent {
+            position: absolute;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .video-container {
-            width: 95%;
-            max-width: 640px;
-            aspect-ratio: 16/9;
-            background: #000;
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
-        }
-
-        .video-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .close-btn {
-            margin-top: 15px;
-            background: #ff3366;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 51, 102, 0.3);
-            text-transform: uppercase;
+            height: 3px;
+            background: linear-gradient(to right, #ff007f, #7f00ff, #00f2fe);
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="header-title">Hollywood Hindi Dubbed</div>
-        
-        <div class="movies-grid" id="movies-container">
-            <!-- Movie cards will load dynamically via JavaScript -->
-        </div>
-    </div>
-
-    <!-- Video Modal Player Structure -->
-    <div id="videoModal" class="video-modal">
-        <div class="video-container">
-            <iframe id="videoPlayer" src="" allowfullscreen></iframe>
-        </div>
-        <button class="close-btn" onclick="closePlayer()">Close Player</button>
+    <div class="shorts-container" id="shortsFeed">
+        <!-- Shorts will inject dynamically here -->
     </div>
 
     <script>
-        // Movie Database Array
-        // Replace videoUrl with your actual streaming/embed links (.mp4, Drive Embed, or Server Embed links)
-        const movies = [
-            {
-                title: "Avatar: The Way of Water (Hindi)",
-                tags: "Action | Sci-Fi | 4K HDR",
-                poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=200", 
-                videoUrl: "https://www.youtube.com/embed/d9MyW72ELq0" 
-            },
-            {
-                title: "Spider-Man: No Way Home (Hindi)",
-                tags: "Action | Adventure | Marvel",
-                poster: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=200",
-                videoUrl: "https://www.youtube.com/embed/JfVOs4VSpmA"
-            },
-            {
-                title: "The Avengers (Hindi Dubbed)",
-                tags: "Action | Fantasy | Sci-Fi",
-                poster: "https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?w=200",
-                videoUrl: "https://www.youtube.com/embed/eOrNdBpGMv8"
-            },
-            {
-                title: "Interstellar (Hindi Dubbed)",
-                tags: "Sci-Fi | Mystery | Masterpiece",
-                poster: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=200",
-                videoUrl: "https://www.youtube.com/embed/zSWdZVtXT7E"
-            },
-            {
-                title: "Transformers: Rise of the Beasts (Hindi)",
-                tags: "Action | Adventure | Sci-Fi",
-                poster: "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=200",
-                videoUrl: "https://www.youtube.com/embed/itnqEauWQZM"
-            }
+        // Array of YouTube Short Video IDs. 
+        // Tip: You can append hundreds of video IDs here for an unlimited scroll experience!
+        const initialShorts = [
+            'q5d2OLc9D_c',
+            'JfVOs4VSpmA',
+            'd9MyW72ELq0',
+            'zSWdZVtXT7E',
+            'itnqEauWQZM'
         ];
 
-        // Function to dynamically build the UI cards
-        function loadMovies() {
-            const container = document.getElementById('movies-container');
-            container.innerHTML = '';
+        const feed = document.getElementById('shortsFeed');
 
-            movies.forEach(movie => {
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                card.onclick = () => openPlayer(movie.videoUrl);
+        // Function to create a clean embedded native YouTube shorts player
+        function createShortCard(videoId) {
+            const slide = document.createElement('div');
+            slide.className = 'short-slide';
 
-                card.innerHTML = `
-                    <img class="movie-poster" src="${movie.poster}" alt="${movie.title}">
-                    <div class="movie-info">
-                        <h3 class="movie-title">${movie.title}</h3>
-                        <span class="movie-tags">${movie.tags}</span>
-                        <div class="play-btn">Play Now</div>
-                    </div>
-                `;
-                container.appendChild(card);
+            // Uses specific parameters to mimic full interface controls native to modern players
+            slide.innerHTML = `
+                <iframe 
+                    src="https://www.youtube.com/embed/${videoId}?autoplay=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+                <div class="bottom-border-accent"></div>
+            `;
+            return slide;
+        }
+
+        // Initialize and fill up the feed layout layout window
+        function initFeed() {
+            initialShorts.forEach(id => {
+                feed.appendChild(createShortCard(id));
             });
         }
 
-        // Opens the internal pop-up player modal
-        function openPlayer(url) {
-            const modal = document.getElementById('videoModal');
-            const player = document.getElementById('videoPlayer');
-            player.src = url;
-            modal.style.display = 'flex';
-        }
+        // Endless Infinite Scroll Engine: Detects near-bottom triggers to generate next set seamlessly
+        feed.addEventListener('scroll', () => {
+            if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 50) {
+                // Duplicate IDs array seamlessly simulating infinite stream loop pool
+                initialShorts.forEach(id => {
+                    feed.appendChild(createShortCard(id));
+                });
+            }
+        });
 
-        // Closes the player and stops the video playback instantly
-        function closePlayer() {
-            const modal = document.getElementById('videoModal');
-            const player = document.getElementById('videoPlayer');
-            player.src = ''; 
-            modal.style.display = 'none';
-        }
-
-        // Initialize App
-        loadMovies();
+        // Run feed generation loop 
+        initFeed();
     </script>
 </body>
 </html>
