@@ -2,127 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Binance BTC/USDT Live Order Stream</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Satellite View</title>
     <style>
-        /* Complete reset for an immersive full-screen edge-to-edge app experience */
+        /* Force full screen, no scrollbars */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #0b0e11; /* Native Binance Dark background */
-            color: #eaeded;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #000;
             overflow: hidden;
-            box-sizing: border-box;
         }
 
-        /* Container scales perfectly to the full screen viewport limits */
-        .history-container {
-            width: 100%;
+        /* Full screen iframe wrapper */
+        .satellite-wrapper {
+            width: 100vw;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            overflow-y: hidden;
-            padding: 10px;
-            box-sizing: border-box;
+            position: relative;
         }
 
-        /* Smooth animation row block styling */
-        .trade-row {
-            display: grid;
-            grid-template-columns: 1.2fr 1.5fr 1fr;
-            padding: 12px 8px;
-            font-size: 15px;
-            font-weight: bold;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            animation: fadeInRow 0.25s ease-out forwards;
-            opacity: 0;
-            transform: translateY(-5px);
+        /* The actual view - embedding the high-res interactive globe */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
         }
 
-        @keyframes fadeInRow {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Color profiles mapped natively to transaction execution markers */
-        .buy {
-            color: #0ecb81; /* Neon green for Buys */
-            text-shadow: 0 0 4px rgba(14, 203, 129, 0.2);
-        }
-
-        .sell {
-            color: #f6465d; /* Neon red for Sells */
-            text-shadow: 0 0 4px rgba(246, 70, 93, 0.2);
-        }
-
-        .time-stamp {
-            color: #848e9c;
-        }
-
-        .amount-val {
-            text-align: right;
-            color: #f1f5f9;
+        /* Minimal Overlay for a premium look */
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            font-family: sans-serif;
+            border-left: 3px solid #00f2fe;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="history-container" id="tradeStream">
-        <!-- Live rows inject natively at the top via WebSocket loops -->
+    <div class="satellite-wrapper">
+        <div class="ui-overlay">
+            <div style="font-size: 10px; opacity: 0.8;">LIVE FEED</div>
+            <div style="font-weight: bold; letter-spacing: 1px;">SATELLITE MAPPING</div>
+        </div>
+
+        <!-- Embedding NASA/Google Earth View optimized for full screen -->
+        <iframe 
+            src="https://earth.google.com/web/@22.5726,88.3639,10a,800d,30y,0h,0t,0r/data=OgMKATA" 
+            allowfullscreen>
+        </iframe>
     </div>
 
-    <script>
-        const streamContainer = document.getElementById('tradeStream');
-        const maxRowsCount = 30; // Maximum elements kept visible on viewport simultaneously to maintain performance
-
-        // Connect directly to the production Binance Public WebSocket system channel
-        const binanceWS = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
-
-        binanceWS.onmessage = (event) => {
-            const tradeData = JSON.parse(event.data);
-
-            // Extract native message target nodes from the execution payload
-            const price = parseFloat(tradeData.p).toFixed(2);
-            const amount = parseFloat(tradeData.q).toFixed(5);
-            const isBuyerMaker = tradeData.m; // True indicates Maker Order (Sell Drive Execution)
-            const tradeTime = new Date(tradeData.E).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-            
-            const marketSideClass = isBuyerMaker ? 'sell' : 'buy';
-
-            // Generate row framework structure
-            const rowHTML = document.createElement('div');
-            rowHTML.className = `trade-row ${marketSideClass}`;
-            rowHTML.innerHTML = `
-                <span class="time-stamp">${tradeTime}</span>
-                <span>$ ${parseFloat(price).toLocaleString()}</span>
-                <span class="amount-val">${amount} BTC</span>
-            `;
-
-            // Prepends data dynamically at the top (Latest order shows first)
-            streamContainer.insertBefore(rowHTML, streamContainer.firstChild);
-
-            // Prunes memory structures actively to sustain high scrolling performance levels
-            if (streamContainer.children.length > maxRowsCount) {
-                streamContainer.removeChild(streamContainer.lastChild);
-            }
-        };
-
-        binanceWS.onerror = (error) => {
-            console.error("WebSocket Error: ", error);
-        };
-
-        binanceWS.onclose = () => {
-            // Instantly trigger recovery link logic if system drops the carrier node
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        };
-    </script>
 </body>
 </html>
