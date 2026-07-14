@@ -3,30 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Murshidabad News Feed</title>
+    <title>Murshidabad News</title>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; }
-        .header { padding: 20px; text-align: center; font-size: 24px; font-weight: bold; color: #38bdf8; }
-        /* প্রিমিয়াম কন্টেইনার */
-        .news-wrapper { max-width: 600px; margin: 0 auto; padding: 10px; border-radius: 20px; background: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        /* উইজেট ফিট করার জন্য স্টাইল */
-        .rss-widget-container { width: 100%; height: 700px; overflow-y: auto; border-radius: 15px; }
+        body { margin: 0; padding: 0; background: #0f172a; color: white; text-align: center; }
+        .header { padding: 20px; font-size: 24px; font-weight: bold; color: #38bdf8; }
+        /* এখানে iframe টি সেট করা হলো */
+        iframe { width: 100%; height: 80vh; border: none; border-radius: 15px; }
     </style>
 </head>
 <body>
 
     <div class="header">মুর্শিদাবাদ লাইভ নিউজ</div>
 
-    <div class="news-wrapper">
-        <div class="rss-widget-container">
-            <!-- আপনার RSS উইজেট কোডটি নিচে পেস্ট করুন -->
-            
-            <script src="YOUR_RSS_WIDGET_CODE_FROM_RSS_APP_OR_FEEDWIND"></script>
-
-            <!-- যদি উইজেট কোড না থাকে, তবে বিকল্প হিসেবে নিচের লাইনটি ব্যবহার করুন -->
-            <p style="text-align: center; padding-top: 20px;">RSS Widget এখানে লোড হবে।</p>
-        </div>
-    </div>
+    <!-- এখানে News18-এর মুর্শিদাবাদ পেজটি সরাসরি লোড হবে -->
+    <iframe src="https://bengali.news18.com/tag/murshidabad" title="Murshidabad News"></iframe>
 
 </body>
 </html>
