@@ -3,69 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yeakub Pro Trader</title>
+    <title>Pro Max Momentum Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #0f172a; color: #ffffff; font-family: sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .coin-card { background: rgba(255, 255, 255, 0.05); border: 1px solid #334155; border-radius: 16px; padding: 15px; margin-bottom: 10px; }
-        .price { font-size: 24px; font-weight: 800; }
-        .levels { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; font-weight: bold; }
-        .tp { color: #00c853; }
-        .sl { color: #ff3d00; }
-        .meta { font-size: 10px; color: #64748b; margin-top: 5px; text-align: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0f172a; color: #fff; padding: 20px; }
+        
+        .strategy-info { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #00c853; }
+        .strategy-info h3 { color: #00c853; margin-bottom: 5px; }
+        .strategy-info p { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+
+        .coin-card { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        .price { font-size: 18px; font-weight: bold; color: #00e5ff; }
+        .trade-levels { font-size: 11px; color: #94a3b8; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="dashboard-container">
-        <h2 style="text-align: center; margin-bottom: 20px;">Pro Momentum Scanner</h2>
+    <div class="strategy-info">
+        <h3>🚀 Pro Max Trading Strategy</h3>
+        <p><b>Entry:</b> Breakout of today's high. | <b>Stop Loss:</b> Today's low (or 2% below entry). | <b>Take Profit:</b> 1:2 Risk-Reward Ratio.</p>
     </div>
 
-    <script>
-        const targetCoins = ['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','MATIC','LINK','DOT'];
-        const leverage = 5;
+    <div id="dashboard-container"></div>
 
+    <script>
+        const targetCoins = ['BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','LINK','MATIC','AVAX'];
+        
         async function checkMomentumSetup(coin) {
             try {
-                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=2`);
-                const data = await res.json();
-                const yOpen = parseFloat(data[0][1]), yClose = parseFloat(data[0][4]);
-                const tOpen = parseFloat(data[1][1]), tClose = parseFloat(data[1][4]);
-                return (yClose > yOpen && tClose > tOpen && tClose >= (yOpen + (yClose - yOpen) * 0.5));
-            } catch { return false; }
+                // Volume check logic (Must have higher volume to be a "Pro" signal)
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=5`);
+                const data = await response.json();
+                
+                const last = data[data.length - 1];
+                const prev = data[data.length - 2];
+                
+                const isGreen = parseFloat(last[4]) > parseFloat(last[1]);
+                const volIncrease = parseFloat(last[5]) > parseFloat(prev[5]); // Volume Filter
+                
+                if (isGreen && volIncrease) {
+                    return { 
+                        entry: parseFloat(last[4]).toFixed(2), 
+                        sl: parseFloat(last[3]).toFixed(2), // Today's Low as SL
+                        tp: (parseFloat(last[4]) * 1.04).toFixed(2) // 4% Target
+                    };
+                }
+            } catch (e) { return null; }
+            return null;
         }
 
         async function initScanner() {
+            const container = document.getElementById('dashboard-container');
             for(let coin of targetCoins) {
-                if(await checkMomentumSetup(coin)) {
-                    document.getElementById('dashboard-container').innerHTML += `
-                        <div class="coin-card" id="card-${coin}">
-                            <div><strong>${coin}</strong></div>
-                            <div class="price" id="price-${coin}">Loading...</div>
-                            <div class="levels">
-                                <span class="tp" id="tp-${coin}">TP: --</span>
-                                <span class="sl" id="sl-${coin}">SL: --</span>
-                            </div>
-                            <div class="meta">Leverage: 5x | Target: 7% | Risk: 5%</div>
+                const signal = await checkMomentumSetup(coin);
+                if(signal) {
+                    container.innerHTML += `
+                        <div class="coin-card">
+                            <div><strong>${coin}</strong><div class="trade-levels">SL: $${signal.sl} | TP: $${signal.tp}</div></div>
+                            <div class="price" id="price-${coin}">$${signal.entry}</div>
                         </div>
                     `;
-                    connectStream(coin);
                 }
             }
-        }
-
-        function connectStream(coin) {
-            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${coin.toLowerCase()}usdt@ticker`);
-            ws.onmessage = (e) => {
-                const p = parseFloat(JSON.parse(e.data).c);
-                // 5x leverage: 7% Profit = 1.4% move, 5% Loss = 1% move
-                const tp = p * 1.014;
-                const sl = p * 0.99;
-                
-                document.getElementById(`price-${coin}`).innerText = `$${p.toFixed(4)}`;
-                document.getElementById(`tp-${coin}`).innerText = `TP: $${tp.toFixed(4)}`;
-                document.getElementById(`sl-${coin}`).innerText = `SL: $${sl.toFixed(4)}`;
-            };
         }
 
         initScanner();
