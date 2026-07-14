@@ -1,43 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Live Signals</title>
     <style>
-        .signal-card {
-            background: #1a1e2a;
-            color: #ffffff;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 10px;
-            font-family: sans-serif;
-            border-left: 5px solid #f3ba2f; /* Binance Color */
-        }
-        .pair-name { font-size: 1.5rem; font-weight: bold; color: #f3ba2f; }
-        .data-row { display: flex; justify-content: space-between; margin-top: 10px; }
-        .label { color: #888; font-size: 0.9rem; }
-        .value { font-weight: bold; }
-        .status-badge { background: #0ecb81; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+        body { background-color: #131722; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .header { margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div class="signal-card">
-    <div class="data-row">
-        <span class="pair-name">BTC / USDT</span>
-        <span class="status-badge">LONG</span>
+    <div class="header">
+        <h1>Live Market Signals</h1>
+        <p>Binance Top Assets</p>
     </div>
-    <div class="data-row">
-        <span class="label">Entry Price:</span>
-        <span class="value">65,200.00</span>
+
+    <!-- TradingView Widget BEGIN -->
+    <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+        {
+            "interval": "15m",
+            "width": "100%",
+            "isTransparent": false,
+            "height": "450",
+            "symbol": "BINANCE:BTCUSDT",
+            "showIntervalTabs": true,
+            "displayMode": "single",
+            "locale": "en",
+            "colorTheme": "dark"
+        }
+        </script>
     </div>
-    <div class="data-row">
-        <span class="label">Stop Loss:</span>
-        <span class="value" style="color: #ff4d4d;">63,800.00</span>
-    </div>
-    <div class="data-row">
-        <span class="label">Take Profit:</span>
-        <span class="value" style="color: #0ecb81;">68,500.00</span>
-    </div>
-</div>
+    <!-- TradingView Widget END -->
 
 </body>
 </html>
