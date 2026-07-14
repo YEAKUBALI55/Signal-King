@@ -1,33 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <style>
+        .signal-card {
+            background: #1a1e2a;
+            color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            font-family: sans-serif;
+            border-left: 5px solid #f3ba2f; /* Binance Color */
+        }
+        .pair-name { font-size: 1.5rem; font-weight: bold; color: #f3ba2f; }
+        .data-row { display: flex; justify-content: space-between; margin-top: 10px; }
+        .label { color: #888; font-size: 0.9rem; }
+        .value { font-weight: bold; }
+        .status-badge { background: #0ecb81; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+    </style>
+</head>
 <body>
 
-    <h2>Local Media Preview</h2>
-    <input type="file" id="fileInput" accept="image/*,video/*">
-    
-    <div id="displayArea" style="margin-top: 20px;"></div>
-
-    <script>
-        const fileInput = document.getElementById('fileInput');
-        const displayArea = document.getElementById('displayArea');
-
-        fileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    if (file.type.startsWith('image/')) {
-                        displayArea.innerHTML = `<img src="${e.target.result}" style="max-width: 300px;">`;
-                    } else if (file.type.startsWith('video/')) {
-                        displayArea.innerHTML = `<video src="${e.target.result}" controls style="max-width: 300px;"></video>`;
-                    }
-                };
-                
-                reader.readAsDataURL(file);
-            }
-        });
-    </script>
+<div class="signal-card">
+    <div class="data-row">
+        <span class="pair-name">BTC / USDT</span>
+        <span class="status-badge">LONG</span>
+    </div>
+    <div class="data-row">
+        <span class="label">Entry Price:</span>
+        <span class="value">65,200.00</span>
+    </div>
+    <div class="data-row">
+        <span class="label">Stop Loss:</span>
+        <span class="value" style="color: #ff4d4d;">63,800.00</span>
+    </div>
+    <div class="data-row">
+        <span class="label">Take Profit:</span>
+        <span class="value" style="color: #0ecb81;">68,500.00</span>
+    </div>
+</div>
 
 </body>
 </html>
