@@ -3,51 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Murshidabad Official News Feed</title>
+<title>Murshidabad Live Updates</title>
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { background: radial-gradient(circle at top right, #1a1a2e, #16213e, #0f3460); color: #fff; min-height: 100vh; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-    .news-container { width: 100%; max-width: 600px; }
-    .news-card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 20px; margin-bottom: 25px; }
-    h2 { font-size: 20px; margin-bottom: 12px; color: #fff; border-left: 4px solid #4ecca3; padding-left: 10px; }
-    p { font-size: 16px; color: #ddd; line-height: 1.6; margin-bottom: 15px; }
-    .meta-container { display: flex; justify-content: space-between; font-size: 12px; color: #4ecca3; font-weight: bold; margin-bottom: 10px; }
-    .meta-container a { color: #ffcc00; text-decoration: none; border-bottom: 1px solid #ffcc00; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+    body { background: #0a0a0a; color: #fff; padding: 20px; }
+    .news-container { max-width: 600px; margin: auto; }
+    .news-card { 
+        background: #1a1a1a; 
+        padding: 20px; 
+        border-radius: 15px; 
+        margin-bottom: 20px; 
+        border-left: 5px solid #4ecca3;
+    }
+    h2 { font-size: 18px; margin-bottom: 10px; color: #4ecca3; }
+    p { font-size: 15px; color: #ccc; margin-bottom: 15px; line-height: 1.5; }
+    .btn-source { 
+        display: inline-block; 
+        padding: 8px 15px; 
+        background: #4ecca3; 
+        color: #000; 
+        text-decoration: none; 
+        border-radius: 5px; 
+        font-weight: bold; 
+        font-size: 14px;
+    }
 </style>
 </head>
 <body>
 
-    <div class="news-container" id="news-container"></div>
+<div class="news-container" id="news-box"></div>
 
 <script>
-    // এই লিংকগুলো মুর্শিদাবাদের অফিশিয়াল এবং ভেরিফাইড সোর্স
+    // এইখানে আপনার নিউজগুলো আপডেট করবেন।
+    // লিংকগুলো এমন জায়গায় দেবেন যেটা ক্লিক করলে সরাসরি সেই নিউজ পেজ বা নোটিশ পেজে নিয়ে যায়।
     const newsData = [
         { 
-            title: "District Administration Updates", 
-            desc: "For all official notices, government schemes, and emergency announcements from the Murshidabad District Administration.", 
+            title: "মুর্শিদাবাদে আজকের নতুন আপডেট", 
+            desc: "আজকের খবরের বিস্তারিত জানতে সোর্স বাটনে ক্লিক করুন।", 
             link: "https://murshidabad.nic.in/notice/" 
-        },
-        { 
-            title: "West Bengal State Portal", 
-            desc: "Official news and government notifications regarding developmental projects in West Bengal.", 
-            link: "https://wb.gov.in/government-notifications.php" 
         }
     ];
 
-    const container = document.getElementById("news-container");
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const box = document.getElementById("news-box");
 
     newsData.forEach(item => {
-        container.innerHTML += `
+        box.innerHTML += `
             <div class="news-card">
-                <div class="meta-container">
-                    <span>${dateStr} | ${timeStr}</span>
-                    <a href="${item.link}" target="_blank">Official Source</a>
-                </div>
                 <h2>${item.title}</h2>
                 <p>${item.desc}</p>
+                <a href="${item.link}" target="_blank" class="btn-source">বিস্তারিত দেখুন (Source)</a>
             </div>
         `;
     });
