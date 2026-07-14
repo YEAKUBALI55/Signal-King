@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Murshidabad Live News</title>
+<title>মুর্শিদাবাদ লাইভ নিউজ</title>
 
 <style>
     *{ margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
@@ -31,14 +31,14 @@
 <script>
     const getFormattedDate = () => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date().toLocaleDateString('en-US', options);
+        return new Date().toLocaleDateString('bn-BD', options);
     };
 
-    // Murshidabad based news list
+    // মুর্শিদাবাদ ভিত্তিক খবরের তালিকা
     const news = [
-        { title:"New Agricultural Project in Murshidabad", image:"https://picsum.photos/900/500?4", desc:"A new irrigation project has been launched to support farmers in the Murshidabad district." },
-        { title:"Train Service Update at Lalgola", image:"https://picsum.photos/900/500?5", desc:"Due to new signaling installation work at Lalgola station, there are some changes in train schedules today." },
-        { title:"Health Awareness Camp in Berhampore", image:"https://picsum.photos/900/500?6", desc:"A special health check-up camp has been organized in Berhampore city for the general public." }
+        { title:"মুর্শিদাবাদে নতুন কৃষি প্রকল্প", image:"https://picsum.photos/900/500?4", desc:"মুর্শিদাবাদ জেলার কৃষকদের সুবিধার জন্য একটি নতুন সেচ প্রকল্পের কাজ শুরু হয়েছে।" },
+        { title:"লালগোলায় ট্রেন পরিষেবায় আপডেট", image:"https://picsum.photos/900/500?5", desc:"লালগোলা স্টেশনে নতুন সিগন্যালিং ব্যবস্থার কাজ চলায় আজ ট্রেন চলাচলে কিছুটা পরিবর্তন আনা হয়েছে।" },
+        { title:"বহরমপুরে স্বাস্থ্য সচেতনতা ক্যাম্প", image:"https://picsum.photos/900/500?6", desc:"বহরমপুর শহরে সাধারণ মানুষের স্বাস্থ্য পরীক্ষার জন্য একটি বিশেষ শিবিরের আয়োজন করা হয়েছে।" }
     ];
 
     const box = document.getElementById("news");
@@ -47,18 +47,18 @@
     news.forEach(n => {
         box.innerHTML += `
             <div class="news">
-                <img src="${n.image}" alt="News Image">
+                <img src="${n.image}" alt="খবরের ছবি">
                 <h2>${n.title}</h2>
                 <p>${n.desc}</p>
                 <div class="news-footer">
-                    <span>Source: Murshidabad Live</span>
-                    <span>Date: ${today}</span>
+                    <span>সূত্র: মুর্শিদাবাদ লাইভ</span>
+                    <span>তারিখ: ${today}</span>
                 </div>
             </div>
         `;
     });
 
-    // Auto-refresh every 30 seconds
+    // ৩০ সেকেন্ড পর পর অটো-রিফ্রেশ
     setInterval(function() {
         location.reload();
     }, 30000); 
