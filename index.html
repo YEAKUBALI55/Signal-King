@@ -1,358 +1,457 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Alpha Quantum Scan Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-        body { background-color: #00875A; color: #333333; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
-        
-        .main-content { background-color: #f4f6fa; border-top-left-radius: 28px; border-top-right-radius: 28px; margin-top: 24px; padding: 20px 15px 95px 15px; flex: 1; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; height: calc(100vh - 24px); z-index: 10; }
-        
-        .signal-card { background-color: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 12px; transition: all 0.4s ease; border: 2px solid transparent; }
-        
-        /* Dynamic Card States */
-        .card-entry-triggered { border-color: #ffb300; background-color: #fffde7; box-shadow: 0 0 15px rgba(255,179,0,0.2); }
-        .card-target-hit { border-color: #00c853; background-color: #f1fbf5; box-shadow: 0 0 15px rgba(0,200,83,0.25); }
-        .card-sl-hit { border-color: #ff3d00; background-color: #fdf2f2; }
+    <div id="dynamic-cards-container" aria-live="polite"></div>
+</div>
 
-        .card-header { display: flex; justify-content: space-between; align-items: center; }
-        .coin-title { font-size: 18px; font-weight: 800; color: #111111; display: flex; align-items: center; gap: 8px; }
-        
-        .strategy-badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .strong-buy { background-color: #e8f5e9; color: #00c853; border: 1px solid #00c853; }
-        .strong-sell { background-color: #ffebee; color: #ff3d00; border: 1px solid #ff3d00; }
-        
-        .alert-status-badge { background-color: #1e293b; color: white; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .badge-entry-hit { background-color: #ffb300; color: #000; }
-        .badge-target-hit { background-color: #00c853; color: #fff; }
-        .badge-sl-hit { background-color: #ff3d00; color: #fff; }
-
-        .price-container { background-color: #f8fafc; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid #edf2f7; }
-        .price-label { font-size: 12px; color: #64748b; font-weight: 500; margin-bottom: 2px; }
-        .live-price { font-size: 28px; font-weight: 900; color: #00875A; }
-        .price-change { font-size: 13px; font-weight: 700; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px; }
-        .change-up { color: #00c853; }
-        .change-down { color: #ff3d00; }
-
-        .levels-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; font-weight: bold; }
-        .level-box { padding: 10px; border-radius: 8px; color: white; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
-        .box-entry { background-color: #00c853; }
-        .box-target { background-color: #2962ff; }
-        .box-stop { background-color: #ff3d00; }
-        .box-algo { background-color: #1e293b; color: #f8fafc; }
-        
-        .level-title { font-size: 9px; opacity: 0.9; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        .level-value { font-size: 13px; font-weight: 700; margin-top: 2px; }
-        .percent-badge { font-size: 8px; background: rgba(255,255,255,0.25); padding: 1px 4px; border-radius: 3px; font-weight: 900; }
-
-        .level-hit-highlight { animation: pulseHighlight 1.5s infinite alternate; box-shadow: 0 0 10px currentColor; }
-        @keyframes pulseHighlight { from { opacity: 0.8; } to { opacity: 1; transform: scale(1.02); } }
-
-        .box-info-bar { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; grid-column: span 2; text-align: center; padding: 7px; border-radius: 8px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
-
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: white; height: 75px; display: flex; justify-content: center; align-items: center; border-top: 1px solid #e2e8f0; box-shadow: 0 -4px 20px rgba(0,0,0,0.03); z-index: 100; }
-        .nav-item-center { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00875A; font-size: 12px; font-weight: 700; gap: 4px; }
-        .nav-item-center i { font-size: 22px; }
-
-        .global-scanner-bar { background-color: #1e293b; color: #f8fafc; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-        #toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 8px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 200; pointer-events: none; font-weight: 500; }
-    </style>
-</head>
-<body>
-
-    <div class="main-content">
-        <div class="global-scanner-bar">
-            <span><i class="fas fa-microchip fa-spin" style="color: #00c853; margin-right: 6px;"></i> Binance Live Array Stream</span>
-            <span id="active-slot-counter" style="background-color: #00875A; padding: 2px 8px; border-radius: 20px;">Slots: 0 / 3</span>
-        </div>
-
-        <div id="dynamic-cards-container" style="display: flex; flex-direction: column; gap: 16px;"></div>
+<div class="bottom-nav" aria-hidden="false">
+    <div class="nav-item-center">
+        <i class="fas fa-chart-bar"></i>
+        <span>Signals Scanner</span>
     </div>
+</div>
 
-    <div class="bottom-nav">
-        <div class="nav-item-center">
-            <i class="fas fa-chart-bar"></i>
-            <span>Signals Scanner</span>
-        </div>
-    </div>
-    
-    <div id="toast">Value copied!</div>
+<div id="toast" role="status" aria-live="polite">Value copied!</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); tg.ready();
+<script>
+    // Identify as Telegram WebApp safely
+    const tg = (typeof window.Telegram === 'object' && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    try{ tg?.expand?.(); tg?.ready?.(); }catch(e){ /* ignore */ }
 
-        function playAlertSound(type) {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
+    // -- Local state and persistence with safe parsing
+    const STORAGE_KEYS = { ACTIVE: 'activeCoins', DATA: 'coinData' };
+    let activeCoins = new Set();
+    let coinData = {};
 
-                if (type === 'target') {
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                    osc.start(); osc.stop(ctx.currentTime + 0.3);
-                } else if (type === 'entry') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-                    osc.start(); osc.stop(ctx.currentTime + 0.2);
-                }
-            } catch(e) { console.log("Audio bypass"); }
+    (function loadFromStorage(){
+        try {
+            const a = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVE) || '[]');
+            const d = JSON.parse(localStorage.getItem(STORAGE_KEYS.DATA) || '{}');
+            if(Array.isArray(a)) activeCoins = new Set(a);
+            if(typeof d === 'object' && d !== null) coinData = d;
+        } catch (err) {
+            console.warn('Could not parse saved state, clearing storage keys.', err);
+            localStorage.removeItem(STORAGE_KEYS.ACTIVE);
+            localStorage.removeItem(STORAGE_KEYS.DATA);
+            activeCoins = new Set();
+            coinData = {};
         }
+    })();
 
-        const maxSlots = 3;
-        
-        // Persistent Memory Initialization
-        let activeCoins = new Set(JSON.parse(localStorage.getItem('activeCoins') || '[]'));
-        let coinData = JSON.parse(localStorage.getItem('coinData') || '{}');
-
-        function saveStateToStorage() {
-            localStorage.setItem('activeCoins', JSON.stringify(Array.from(activeCoins)));
-            localStorage.setItem('coinData', JSON.stringify(coinData));
+    function saveStateToStorage(){
+        try {
+            localStorage.setItem(STORAGE_KEYS.ACTIVE, JSON.stringify(Array.from(activeCoins)));
+            localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(coinData));
+        } catch (err) {
+            console.warn('Failed to save to localStorage', err);
         }
+    }
 
-        // 1. COMPLETELY DRAW SAVED CARDS FIRST
-        function loadSavedStateOnRefresh() {
-            updateSlotUIHeader();
-            activeCoins.forEach(coin => {
-                if (coinData[coin]) {
-                    injectCardMarkup(coin, coinData[coin].lastEntryBasePrice || coinData[coin].entryVal, 0);
-                    
-                    // Recover accurate visual states
-                    if (coinData[coin].currentTrackState === 'active_in_trade') {
-                        document.getElementById(`card-${coin}`).className = "signal-card card-entry-triggered";
-                        document.getElementById(`alert-badge-${coin}`).innerText = "ENTRY HIT";
-                        document.getElementById(`alert-badge-${coin}`).className = "alert-status-badge badge-entry-hit";
-                        document.getElementById(`status-text-${coin}`).innerText = "LOCKED 🔒";
-                        document.getElementById(`box-entry-${coin}`).classList.add('level-hit-highlight');
-                    }
-                }
-            });
+    const maxSlots = 3;
+    const container = document.getElementById('dynamic-cards-container');
+    const toast = document.getElementById('toast');
+
+    // Number formatting helper
+    function formatNumber(value, decimals){
+        try {
+            return new Intl.NumberFormat(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals}).format(value);
+        } catch(e){
+            return Number(value).toFixed(decimals);
         }
+    }
 
-        // Initialize saved DOM elements immediately before WebSocket starts running
-        loadSavedStateOnRefresh();
+    // Audio context reuse (created on first user gesture)
+    let audioCtx = null;
+    function ensureAudioContext(){
+        if(audioCtx) return audioCtx;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {
+            audioCtx = null;
+        }
+        return audioCtx;
+    }
+    // Try to resume on user interaction
+    function resumeAudioOnUserGesture(){
+        if(!audioCtx) return;
+        if(audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+    }
+    ['click','touchstart','keydown'].forEach(ev => window.addEventListener(ev, resumeAudioOnUserGesture, {once:true}));
 
-        // 2. NOW START WEBSOCKET STREAM SCANNER
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+    function playAlertSound(type){
+        const ctx = ensureAudioContext();
+        if(!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        gain.gain.value = 0.0;
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            data.forEach(ticker => {
-                if (ticker.s.endsWith('USDT') && !ticker.s.includes('UP') && !ticker.s.includes('DOWN')) {
-                    const coin = ticker.s.replace('USDT', '');
-                    processGlobalStream(coin, parseFloat(ticker.c), parseFloat(ticker.o));
-                }
-            });
+        if(type === 'target'){
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(660, ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime);
+            osc.start(); osc.stop(ctx.currentTime + 0.28);
+        } else if(type === 'entry'){
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime);
+            osc.start(); osc.stop(ctx.currentTime + 0.18);
+        } else if(type === 'error'){
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(220, ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime);
+            osc.start(); osc.stop(ctx.currentTime + 0.22);
+        }
+    }
+
+    // Haptic helper
+    function doHaptic(type){
+        try {
+            if(tg && tg.HapticFeedback) {
+                if(type === 'heavy') tg.HapticFeedback.impact('heavy');
+                else if(type === 'success') tg.HapticFeedback.notificationOccurred('success');
+                else if(type === 'error') tg.HapticFeedback.notificationOccurred('error');
+                else if(type === 'warning') tg.HapticFeedback.notificationOccurred('warning');
+            }
+        } catch(e){ /* ignore */ }
+    }
+
+    // UI header
+    function updateSlotUIHeader(){
+        const el = document.getElementById('active-slot-counter');
+        if(el) el.innerText = `Slots: ${activeCoins.size} / ${maxSlots}`;
+    }
+
+    // Throttle updates per coin to avoid DOM thrash (ms)
+    const UPDATE_THROTTLE_MS = 300;
+
+    // Inject card markup (no inline onclicks). Uses data attributes for copy.
+    function injectCardMarkup(coin){
+        const c = coinData[coin];
+        if(!c) return;
+        const isLong = c.direction === 'LONG';
+        // helper for % calc
+        const calcPct = (targetVal) => {
+            const pct = ((targetVal - c.entryVal) / c.entryVal) * 100;
+            return (c.direction === 'SHORT' ? -pct : pct);
         };
 
-        function processGlobalStream(coin, currentPrice, openPrice) {
-            const percentChange = ((currentPrice - openPrice) / openPrice) * 100;
+        const safeId = coin.replace(/[^a-zA-Z0-9_-]/g, '_'); // safe id part
+        const cardId = `card-${safeId}`;
 
-            if (activeCoins.has(coin)) {
-                runQuantumEngine(coin, currentPrice, percentChange);
-                return;
+        if(document.getElementById(cardId)) return; // already injected
+
+        const html = `
+            <div class="signal-card" id="${cardId}" data-coin="${coin}" role="group" aria-label="${coin} trade card">
+                <div class="card-header">
+                    <div class="coin-title">${coin}/USDT <span class="strategy-badge ${isLong ? 'strong-buy' : 'strong-sell'}" id="signal-badge-${safeId}">${c.lastSignal}</span></div>
+                    <div class="alert-status-badge" id="alert-badge-${safeId}">AWAITING ENTRY</div>
+                </div>
+
+                <div class="price-container">
+                    <div class="price-label">Live Price Tracking</div>
+                    <div class="live-price" id="price-${safeId}">$${formatNumber(c.lastEntryBasePrice || c.entryVal, c.decimals)}</div>
+                    <div class="price-change" id="change-${safeId}">${(c.lastPercent||0)>=0?'+':''}${(c.lastPercent||0).toFixed(2)}%</div>
+                </div>
+
+                <div class="levels-grid">
+                    <div class="level-box box-entry" role="button" tabindex="0" aria-label="Copy optimum entry" data-copy-value="${formatNumber(c.entryVal, c.decimals)}" data-target="entry-${safeId}">
+                        <span class="level-title">Optimum Entry</span>
+                        <span class="level-value" id="entry-${safeId}">${formatNumber(c.entryVal, c.decimals)}</span>
+                    </div>
+
+                    <div class="level-box box-target" role="button" tabindex="0" aria-label="Copy target 1" data-copy-value="${formatNumber(c.t1Val, c.decimals)}" data-target="target1-${safeId}">
+                        <span class="level-title">T1 <span class="percent-badge" id="p-t1-${safeId}">${calcPct(c.t1Val).toFixed(2)}%</span></span>
+                        <span class="level-value" id="target1-${safeId}">${formatNumber(c.t1Val, c.decimals)}</span>
+                    </div>
+
+                    <div class="level-box box-target" role="button" tabindex="0" aria-label="Copy target 2" data-copy-value="${formatNumber(c.t2Val, c.decimals)}" data-target="target2-${safeId}" style="background-color:#0288d1">
+                        <span class="level-title">T2 <span class="percent-badge" id="p-t2-${safeId}">${calcPct(c.t2Val).toFixed(2)}%</span></span>
+                        <span class="level-value" id="target2-${safeId}">${formatNumber(c.t2Val, c.decimals)}</span>
+                    </div>
+
+                    <div class="level-box box-stop" role="button" tabindex="0" aria-label="Copy stop loss" data-copy-value="${formatNumber(c.slVal, c.decimals)}" data-target="stop-${safeId}">
+                        <span class="level-title">SL <span class="percent-badge" id="p-sl-${safeId}">${calcPct(c.slVal).toFixed(2)}%</span></span>
+                        <span class="level-value" id="stop-${safeId}">${formatNumber(c.slVal, c.decimals)}</span>
+                    </div>
+
+                    <div class="level-box box-algo" style="background: #0f1724">
+                        <span class="level-title">Engine Slot</span>
+                        <span class="level-value" style="color:var(--accent)">ACTIVE</span>
+                    </div>
+
+                    <div class="level-box box-algo" style="background:#475569">
+                        <span class="level-title">Status</span>
+                        <span class="level-value" id="status-text-${safeId}">${c.currentTrackState === 'active_in_trade' ? 'LOCKED 🔒' : 'Ready'}</span>
+                    </div>
+
+                    <div class="box-info-bar" id="info-${safeId}"><i class="fas fa-bullseye" style="color:#ffb300"></i> Entry levels deployed. Monitoring market tap...</div>
+                </div>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+
+        // If recovered state was active_in_trade, update classes/visuals
+        if(c.currentTrackState === 'active_in_trade'){
+            const cardEl = document.getElementById(cardId);
+            if(cardEl) {
+                cardEl.classList.add('card-entry-triggered');
+                document.getElementById(`alert-badge-${safeId}`).innerText = 'ENTRY HIT';
+                document.getElementById(`alert-badge-${safeId}`).classList.add('badge-entry-hit');
+                const entryBox = cardEl.querySelector('.box-entry');
+                if(entryBox) entryBox.classList.add('level-hit-highlight');
+                const statusEl = document.getElementById(`status-text-${safeId}`);
+                if(statusEl) statusEl.innerText = 'LOCKED 🔒';
             }
+        }
+    }
 
-            if (activeCoins.size < maxSlots && Math.abs(percentChange) > 2.5) {
+    // Event delegation for copy clicks/keyboard
+    container.addEventListener('click', (e) => {
+        const box = e.target.closest('.level-box');
+        if(!box) return;
+        const copyVal = box.getAttribute('data-copy-value');
+        if(copyVal){
+            navigator.clipboard.writeText(copyVal).then(()=> {
+                showToast(`Copied: ${copyVal}`);
+                doHaptic('heavy');
+            }).catch(()=> showToast('Copy failed'));
+        }
+    });
+    container.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') {
+            const box = e.target.closest('.level-box');
+            if(box && box.getAttribute('data-copy-value')){
+                e.preventDefault();
+                box.click();
+            }
+        }
+    });
+
+    // Toast helper
+    let toastTimer = null;
+    function showToast(msg){
+        toast.innerText = msg;
+        toast.style.opacity = '1';
+        if(toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> toast.style.opacity = '0', 1800);
+    }
+
+    // Binance stream + state machine
+    function processGlobalStream(coin, currentPrice, openPrice){
+        const percentChange = ((currentPrice - openPrice)/openPrice)*100;
+        // update last percent for formatting in UI
+        if(coinData[coin]) coinData[coin].lastPercent = percentChange;
+        // if active, run engine else maybe open slot
+        if(activeCoins.has(coin)){
+            runQuantumEngine(coin, currentPrice, percentChange);
+        } else {
+            if(activeCoins.size < maxSlots && Math.abs(percentChange) > 2.5){
                 initializeNewTradeSlot(coin, currentPrice, percentChange);
             }
         }
+    }
 
-        function initializeNewTradeSlot(coin, price, percentChange) {
-            if(activeCoins.has(coin)) return;
+    function initializeNewTradeSlot(coin, price, percentChange){
+        if(activeCoins.has(coin)) return;
+        activeCoins.add(coin);
 
-            activeCoins.add(coin);
-            const isLong = percentChange > 0;
-            const direction = isLong ? 'LONG' : 'SHORT';
+        const isLong = percentChange > 0;
+        const decimals = price < 0.01 ? 6 : (price < 1 ? 4 : 2);
+        const direction = isLong ? 'LONG' : 'SHORT';
+        coinData[coin] = {
+            decimals,
+            currentTrackState: 'monitoring_entry',
+            direction,
+            lastSignal: isLong ? 'STRONG BUY' : 'STRONG SELL',
+            lastEntryBasePrice: price,
+            entryVal: isLong ? price * 0.9985 : price * 1.0015,
+            t1Val: isLong ? price * 1.0060 : price * 0.9940,
+            t2Val: isLong ? price * 1.0140 : price * 0.9860,
+            slVal: isLong ? price * 0.9920 : price * 1.0080,
+            lastUpdate: 0
+        };
+        saveStateToStorage();
+        updateSlotUIHeader();
+        injectCardMarkup(coin);
+    }
 
-            let decimals = 2;
-            if (price < 1) decimals = 4;
-            if (price < 0.01) decimals = 6;
+    // Update logic throttled per coin
+    function runQuantumEngine(coin, price, percentChange){
+        const config = coinData[coin];
+        if(!config) return;
+        const now = Date.now();
+        if(config.lastUpdate && (now - config.lastUpdate) < UPDATE_THROTTLE_MS) {
+            // update stored price and percent but skip DOM update
+            config._pendingPrice = price;
+            config._pendingPercent = percentChange;
+            return;
+        }
+        config.lastUpdate = now;
+        // apply pending queued value next when needed
+        const safeId = coin.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-            coinData[coin] = {
-                decimals: decimals,
-                currentTrackState: 'monitoring_entry',
-                direction: direction,
-                lastSignal: isLong ? 'STRONG BUY' : 'STRONG SELL',
-                lastEntryBasePrice: price, 
-                entryVal: isLong ? price * 0.9985 : price * 1.0015,
-                t1Val: isLong ? price * 1.0060 : price * 0.9940,
-                t2Val: isLong ? price * 1.0140 : price * 0.9860,
-                slVal: isLong ? price * 0.9920 : price * 1.0080
-            };
-
-            saveStateToStorage();
-            updateSlotUIHeader();
-            injectCardMarkup(coin, price, percentChange);
+        // update DOM
+        const priceEl = document.getElementById(`price-${safeId}`);
+        const changeEl = document.getElementById(`change-${safeId}`);
+        if(priceEl) priceEl.innerText = '$' + formatNumber(price, config.decimals);
+        if(changeEl){
+            changeEl.innerText = `${percentChange>=0?'+':''}${percentChange.toFixed(2)}%`;
+            changeEl.className = `price-change ${percentChange>=0 ? 'change-up' : 'change-down'}`;
         }
 
-        function injectCardMarkup(coin, price, percentChange) {
-            const c = coinData[coin];
-            if (!c) return;
-            const isLong = c.direction === 'LONG';
-
-            const calcPct = (targetVal) => {
-                const pct = ((targetVal - c.entryVal) / c.entryVal) * 100;
-                return (c.direction === 'SHORT' ? -pct : pct).toFixed(2);
-            };
-            const prefix = (val) => (parseFloat(val) > 0 ? '+' : '');
-
-            const cardContainer = document.getElementById('dynamic-cards-container');
-            const cardHtml = `
-                <div class="signal-card" id="card-${coin}">
-                    <div class="card-header">
-                        <div class="coin-title">${coin}/USDT <span class="strategy-badge ${isLong ? 'strong-buy' : 'strong-sell'}" id="signal-badge-${coin}">${c.lastSignal}</span></div>
-                        <div class="alert-status-badge" id="alert-badge-${coin}">AWAITING ENTRY</div>
-                    </div>
-                    <div class="price-container">
-                        <div class="price-label">Live Price Tracking</div>
-                        <div class="live-price" id="price-${coin}">$${price.toFixed(c.decimals)}</div>
-                        <div class="price-change" id="change-${coin}">${prefix(percentChange)}${percentChange.toFixed(2)}%</div>
-                    </div>
-                    <div class="levels-grid">
-                        <div class="level-box box-entry" id="box-entry-${coin}" onclick="copyValue('${coin}_entry')">
-                            <span class="level-title">Optimum Entry</span><span class="level-value" id="entry-${coin}">${c.entryVal.toFixed(c.decimals)}</span>
-                        </div>
-                        <div class="level-box box-target" id="box-t1-${coin}" onclick="copyValue('${coin}_target1')">
-                            <span class="level-title">T1 <span class="percent-badge" id="p-t1-${coin}">${prefix(calcPct(c.t1Val))}${calcPct(c.t1Val)}%</span></span>
-                            <span class="level-value" id="target1-${coin}">${c.t1Val.toFixed(c.decimals)}</span>
-                        </div>
-                        <div class="level-box box-target" id="box-t2-${coin}" onclick="copyValue('${coin}_target2')" style="background-color: #0288d1;">
-                            <span class="level-title">T2 <span class="percent-badge" id="p-t2-${coin}">${prefix(calcPct(c.t2Val))}${calcPct(c.t2Val)}%</span></span>
-                            <span class="level-value" id="target2-${coin}">${c.t2Val.toFixed(c.decimals)}</span>
-                        </div>
-                        <div class="level-box box-stop" id="box-sl-${coin}" onclick="copyValue('${coin}_stop')">
-                            <span class="level-title">SL <span class="percent-badge" id="p-sl-${coin}">${calcPct(c.slVal)}%</span></span>
-                            <span class="level-value" id="stop-${coin}">${c.slVal.toFixed(c.decimals)}</span>
-                        </div>
-                        <div class="level-box box-algo"><span class="level-title">Engine Slot</span><span class="level-value" style="color: #00c853;">ACTIVE</span></div>
-                        <div class="level-box box-algo" style="background-color: #475569;"><span class="level-title">Status</span><span class="level-value" id="status-text-${coin}">Ready</span></div>
-                        <div class="box-info-bar" id="info-${coin}"><i class="fas fa-bullseye" style="color: #ffb300;"></i> Entry levels deployed. Monitoring market tap...</div>
-                    </div>
-                </div>`;
-            
-            cardContainer.insertAdjacentHTML('beforeend', cardHtml);
+        // state transitions
+        if(config.currentTrackState === 'active_in_trade'){
+            monitorActiveTradeState(coin, price);
+            return;
         }
-
-        function runQuantumEngine(coin, price, percentChange) {
-            const config = coinData[coin];
-            if (!config) return;
-
-            const prefix = percentChange >= 0 ? '+' : '';
-
-            const priceEl = document.getElementById(`price-${coin}`);
-            const changeEl = document.getElementById(`change-${coin}`);
-            
-            if(priceEl) priceEl.innerText = '$' + price.toFixed(config.decimals);
-            if(changeEl) {
-                changeEl.innerText = prefix + percentChange.toFixed(2) + '%';
-                changeEl.className = `price-change ${percentChange >= 0 ? 'change-up' : 'change-down'}`;
-            }
-
-            if (config.currentTrackState === 'active_in_trade') {
-                monitorActiveTradeState(coin, price);
-                return;
-            }
-
-            if (config.currentTrackState === 'monitoring_entry') {
-                const isHit = config.direction === 'LONG' ? (price <= config.entryVal) : (price >= config.entryVal);
-                if (isHit) {
-                    config.currentTrackState = 'active_in_trade';
-                    saveStateToStorage(); 
-                    
-                    const cardEl = document.getElementById(`card-${coin}`);
-                    const badgeEl = document.getElementById(`alert-badge-${coin}`);
-                    const statusEl = document.getElementById(`status-text-${coin}`);
-                    const boxEl = document.getElementById(`box-entry-${coin}`);
-
-                    if(cardEl) cardEl.className = "signal-card card-entry-triggered";
-                    if(badgeEl) {
-                        badgeEl.innerText = "ENTRY HIT";
-                        badgeEl.className = "alert-status-badge badge-entry-hit";
-                    }
-                    if(statusEl) statusEl.innerText = "LOCKED 🔒";
-                    if(boxEl) boxEl.classList.add('level-hit-highlight');
-                    
-                    playAlertSound('entry');
-                    if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-                }
-            }
-        }
-
-        function monitorActiveTradeState(coin, price) {
-            const config = coinData[coin];
-            if (!config) return;
-
-            const infoEl = document.getElementById(`info-${coin}`);
-            if(infoEl) infoEl.innerHTML = `<i class="fas fa-lock" style="color: #ff3d00;"></i> Allocation Locked. Trailing limits tracking active...`;
-
-            const isTargetHit = config.direction === 'LONG' ? (price >= config.t1Val) : (price <= config.t1Val);
-            const isSLHit = config.direction === 'LONG' ? (price <= config.slVal) : (price >= config.slVal);
-
-            if (isTargetHit || isSLHit) {
-                config.currentTrackState = 'terminated'; 
+        if(config.currentTrackState === 'monitoring_entry'){
+            const isHit = config.direction === 'LONG' ? (price <= config.entryVal) : (price >= config.entryVal);
+            if(isHit){
+                config.currentTrackState = 'active_in_trade';
                 saveStateToStorage();
-                
-                const card = document.getElementById(`card-${coin}`);
-                const badge = document.getElementById(`alert-badge-${coin}`);
-                const statusText = document.getElementById(`status-text-${coin}`);
-                const highlightBox = document.getElementById(isTargetHit ? `box-t1-${coin}` : `box-sl-${coin}`);
 
-                if(card) card.className = "signal-card " + (isTargetHit ? "card-target-hit" : "card-sl-hit");
-                if(badge) {
-                    badge.innerText = isTargetHit ? "TARGET HIT 🎉" : "SL HIT ❌";
-                    badge.className = "alert-status-badge " + (isTargetHit ? "badge-target-hit" : "badge-sl-hit");
-                }
-                if(statusText) statusText.innerText = "Ready";
-                if(highlightBox) highlightBox.classList.add('level-hit-highlight');
-                
-                playAlertSound(isTargetHit ? 'target' : 'error');
-                if(window.Telegram && tg.HapticFeedback) {
-                    tg.HapticFeedback.notificationOccurred(isTargetHit ? 'success' : 'error');
-                }
+                const cardEl = document.getElementById(`card-${safeId}`);
+                const badgeEl = document.getElementById(`alert-badge-${safeId}`);
+                const statusEl = document.getElementById(`status-text-${safeId}`);
+                const entryBox = document.getElementById(`entry-${safeId}`)?.closest('.level-box') || document.querySelector(`#card-${safeId} .box-entry`);
 
-                setTimeout(() => {
-                    if(card) {
-                        card.style.opacity = '0';
-                        card.style.transition = 'all 0.5s ease';
-                        setTimeout(() => {
-                            card.remove();
-                            activeCoins.delete(coin);
-                            delete coinData[coin];
-                            saveStateToStorage(); 
-                            updateSlotUIHeader();
-                        }, 500);
+                cardEl?.classList.add('card-entry-triggered');
+                if(badgeEl){ badgeEl.innerText = 'ENTRY HIT'; badgeEl.classList.add('badge-entry-hit'); }
+                if(statusEl) statusEl.innerText = 'LOCKED 🔒';
+                if(entryBox) entryBox.classList.add('level-hit-highlight');
+
+                playAlertSound('entry');
+                doHaptic('warning');
+            }
+        }
+    }
+
+    function monitorActiveTradeState(coin, price){
+        const config = coinData[coin];
+        if(!config) return;
+        const safeId = coin.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+        const infoEl = document.getElementById(`info-${safeId}`);
+        if(infoEl) infoEl.innerHTML = `<i class="fas fa-lock" style="color:${'#ff3d00'}"></i> Allocation Locked. Trailing limits tracking active...`;
+
+        const isTargetHit = config.direction === 'LONG' ? (price >= config.t1Val) : (price <= config.t1Val);
+        const isSLHit = config.direction === 'LONG' ? (price <= config.slVal) : (price >= config.slVal);
+
+        if(isTargetHit || isSLHit){
+            config.currentTrackState = 'terminated';
+            saveStateToStorage();
+            const card = document.getElementById(`card-${safeId}`);
+            const badge = document.getElementById(`alert-badge-${safeId}`);
+            const statusText = document.getElementById(`status-text-${safeId}`);
+            const highlightBox = document.getElementById(isTargetHit ? `target1-${safeId}` : `stop-${safeId}`)?.closest('.level-box');
+
+            if(card) {
+                card.classList.remove('card-entry-triggered');
+                card.classList.add(isTargetHit ? 'card-target-hit' : 'card-sl-hit');
+            }
+            if(badge) {
+                badge.innerText = isTargetHit ? 'TARGET HIT 🎉' : 'SL HIT ❌';
+                badge.classList.add(isTargetHit ? 'badge-target-hit' : 'badge-sl-hit');
+            }
+            if(statusText) statusText.innerText = 'Ready';
+            if(highlightBox) highlightBox.classList.add('level-hit-highlight');
+
+            playAlertSound(isTargetHit ? 'target' : 'error');
+            doHaptic(isTargetHit ? 'success' : 'error');
+
+            // remove after delay and free slot
+            setTimeout(()=> {
+                if(card) {
+                    card.style.transition = 'opacity .5s ease, transform .4s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(8px)';
+                    setTimeout(()=> {
+                        card.remove();
+                        activeCoins.delete(coin);
+                        delete coinData[coin];
+                        saveStateToStorage();
+                        updateSlotUIHeader();
+                    }, 500);
+                }
+            }, 3000);
+        }
+    }
+
+    // Restore saved cards at startup
+    function loadSavedStateOnRefresh(){
+        updateSlotUIHeader();
+        for(const coin of Array.from(activeCoins)){
+            if(coinData[coin]){
+                injectCardMarkup(coin);
+            } else {
+                // clean up stray active coin if no data
+                activeCoins.delete(coin);
+                saveStateToStorage();
+                updateSlotUIHeader();
+            }
+        }
+    }
+    loadSavedStateOnRefresh();
+
+    // WebSocket with reconnect/backoff
+    let ws = null;
+    let reconnectDelay = 1000; // start
+    const MAX_RECONNECT = 60000;
+    function connectWS(){
+        try {
+            ws = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
+        } catch(err){
+            console.error('WebSocket creation failed', err);
+            scheduleReconnect();
+            return;
+        }
+
+        ws.onopen = () => {
+            console.info('Binance WS connected');
+            reconnectDelay = 1000;
+        };
+
+        ws.onmessage = (evt) => {
+            try {
+                const data = JSON.parse(evt.data);
+                if(!Array.isArray(data)) return;
+                for(const ticker of data){
+                    // Symbol sanity check
+                    if(!ticker.s || !ticker.c || !ticker.o) continue;
+                    if(ticker.s.endsWith('USDT') && !ticker.s.includes('UP') && !ticker.s.includes('DOWN')){
+                        const coin = ticker.s.replace('USDT','');
+                        const current = parseFloat(ticker.c);
+                        const open = parseFloat(ticker.o);
+                        if(Number.isFinite(current) && Number.isFinite(open)) processGlobalStream(coin, current, open);
                     }
-                }, 4000);
+                }
+            } catch(err){
+                console.warn('Failed to parse WS message', err);
             }
-        }
+        };
 
-        function updateSlotUIHeader() {
-            const element = document.getElementById('active-slot-counter');
-            if(element) element.innerText = `Slots: ${activeCoins.size} / ${maxSlots}`;
-        }
+        ws.onerror = (err) => {
+            console.warn('WS error', err);
+            // allow close/reconnect logic to handle
+        };
 
-        function copyValue(id) {
-            const el = document.getElementById(id.replace('_', '-'));
-            if(!el) return;
-            const val = el.innerText;
-            if (val !== '--' && val !== 'Loading...') {
-                navigator.clipboard.writeText(val);
-                const toast = document.getElementById('toast');
-                toast.innerText = `Copied Target Value: ${val}`;
-                toast.style.opacity = '1';
-                setTimeout(() => toast.style.opacity = '0', 2000);
-                if(window.Telegram && tg.HapticFeedback) tg.HapticFeedback.impact('heavy');
-            }
-        }
-    </script>
-</body>
-</html>
+        ws.onclose = (ev) => {
+            console.info('WS closed', ev);
+            scheduleReconnect();
+        };
+    }
+
+    function scheduleReconnect(){
+        if(ws && ws.readyState === WebSocket.OPEN) return;
+        setTimeout(()=> {
+            reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT);
+            connectWS();
+        }, reconnectDelay);
+    }
+
+    connectWS();
+
+    // Defensive cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        try{ ws?.close(); }catch{}
+    });
+</script>
