@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WB Live News</title>
+<title>Murshidabad Live News</title>
 
 <style>
     *{ margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
@@ -31,13 +31,14 @@
 <script>
     const getFormattedDate = () => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date().toLocaleDateString('bn-BD', options);
+        return new Date().toLocaleDateString('en-US', options);
     };
 
+    // Murshidabad based news list
     const news = [
-        { title:"কলকাতায় প্রবল বৃষ্টির সম্ভাবনা", image:"https://picsum.photos/900/500?1", desc:"আবহাওয়া দপ্তরের পূর্বাভাস অনুযায়ী আগামী ২৪ ঘণ্টায় দক্ষিণবঙ্গের বিভিন্ন জেলায় ভারী বৃষ্টির সম্ভাবনা রয়েছে।" },
-        { title:"হাওড়ায় নতুন উন্নয়ন প্রকল্প", image:"https://picsum.photos/900/500?2", desc:"রাজ্য সরকারের নতুন প্রকল্পে হাওড়া জেলায় একাধিক উন্নয়নমূলক কাজ শুরু হয়েছে।" },
-        { title:"উত্তরবঙ্গে পর্যটকদের ভিড়", image:"https://picsum.photos/900/500?3", desc:"দার্জিলিং ও ডুয়ার্সে পর্যটকদের সংখ্যা বেড়েছে।" }
+        { title:"New Agricultural Project in Murshidabad", image:"https://picsum.photos/900/500?4", desc:"A new irrigation project has been launched to support farmers in the Murshidabad district." },
+        { title:"Train Service Update at Lalgola", image:"https://picsum.photos/900/500?5", desc:"Due to new signaling installation work at Lalgola station, there are some changes in train schedules today." },
+        { title:"Health Awareness Camp in Berhampore", image:"https://picsum.photos/900/500?6", desc:"A special health check-up camp has been organized in Berhampore city for the general public." }
     ];
 
     const box = document.getElementById("news");
@@ -50,14 +51,14 @@
                 <h2>${n.title}</h2>
                 <p>${n.desc}</p>
                 <div class="news-footer">
-                    <span>সূত্র: WB Live News</span>
-                    <span>তারিখ: ${today}</span>
+                    <span>Source: Murshidabad Live</span>
+                    <span>Date: ${today}</span>
                 </div>
             </div>
         `;
     });
 
-    // অটো-রিফ্রেশ স্ক্রিপ্ট (৩০ সেকেন্ড পর পর)
+    // Auto-refresh every 30 seconds
     setInterval(function() {
         location.reload();
     }, 30000); 
