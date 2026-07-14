@@ -1,146 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal King Alpha Quantum Scan Pro</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* CSS styles remain the same for layout */
-    </style>
-</head>
-<body>
+function renderSignalCard(symbol, price, percentChange) {
+    const data = coinData[symbol];
+    if (!data) return;
+    
+    const isLong = data.direction === 'LONG';
+    const container = document.getElementById('dynamic-cards-container');
+    
+    if (!container) return; // Safety check to ensure container exists
 
-    <div class="main-content">
-        <div class="global-scanner-bar">
-            <span><i class="fas fa-microchip fa-spin" style="color: #00c853; margin-right: 6px;"></i> Binance Live Stream</span>
-            <span id="active-slot-counter" style="background-color: #00875A; padding: 2px 8px; border-radius: 20px;">Slots: 0 / 3</span>
+    const card = document.createElement('div');
+    card.className = "signal-card";
+    card.id = `card-${symbol}`;
+    
+    card.innerHTML = `
+        <div class="card-header">
+            <div class="coin-title">${symbol}/USDT <span class="strategy-badge ${isLong ? 'strong-buy' : 'strong-sell'}">${data.lastSignal}</span></div>
+            <div class="alert-status-badge" id="alert-badge-${symbol}">AWAITING ENTRY</div>
         </div>
-
-        <div id="dynamic-cards-container" style="display: flex; flex-direction: column; gap: 16px;"></div>
-    </div>
-
-    <!-- Rest of the HTML structure remains identical -->
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); tg.ready();
-
-        // Optimized Sound Notification
-        function playAlertSound(type) {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
-                oscillator.connect(gainNode); gainNode.connect(ctx.destination);
-
-                if (type === 'target') {
-                    oscillator.type = 'triangle'; oscillator.frequency.setValueAtTime(587.33, ctx.currentTime);
-                    oscillator.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
-                    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-                    oscillator.start(); oscillator.stop(ctx.currentTime + 0.3);
-                } else if (type === 'entry') {
-                    oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(440, ctx.currentTime);
-                    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-                    oscillator.start(); oscillator.stop(ctx.currentTime + 0.2);
-                }
-            } catch(error) { console.log("Audio alert bypassed"); }
-        }
-
-        const MAX_SLOTS = 3;
-        let activeCoins = new Set(JSON.parse(localStorage.getItem('activeCoins') || '[]'));
-        let coinData = JSON.parse(localStorage.getItem('coinData') || '{}');
-
-        function saveSessionState() {
-            localStorage.setItem('activeCoins', JSON.stringify(Array.from(activeCoins)));
-            localStorage.setItem('coinData', JSON.stringify(coinData));
-        }
-
-        // Initialize saved trades
-        function restoreSession() {
-            updateSlotCounter();
-            activeCoins.forEach(coin => {
-                if (coinData[coin]) {
-                    renderSignalCard(coin, coinData[coin].lastEntryBasePrice || coinData[coin].entryVal, 0);
-                    
-                    if (coinData[coin].currentTrackState === 'active_in_trade') {
-                        document.getElementById(`card-${coin}`).className = "signal-card card-entry-triggered";
-                        document.getElementById(`alert-badge-${coin}`).innerText = "ENTRY HIT";
-                        document.getElementById(`status-text-${coin}`).innerText = "LOCKED 🔒";
-                    }
-                }
-            });
-        }
-
-        restoreSession();
-
-        const binanceSocket = new WebSocket('wss://stream.binance.com:9443/ws/!miniTicker@arr');
-
-        binanceSocket.onmessage = (event) => {
-            const tickerData = JSON.parse(event.data);
-            tickerData.forEach(ticker => {
-                if (ticker.s.endsWith('USDT') && !ticker.s.includes('UP') && !ticker.s.includes('DOWN')) {
-                    const symbol = ticker.s.replace('USDT', '');
-                    monitorMarketStream(symbol, parseFloat(ticker.c), parseFloat(ticker.o));
-                }
-            });
-        };
-
-        function monitorMarketStream(symbol, currentPrice, openPrice) {
-            const percentChange = ((currentPrice - openPrice) / openPrice) * 100;
-
-            if (activeCoins.has(symbol)) {
-                executeEngineLogic(symbol, currentPrice, percentChange);
-                return;
-            }
-
-            if (activeCoins.size < MAX_SLOTS && Math.abs(percentChange) > 2.5) {
-                initializeNewTrade(symbol, currentPrice, percentChange);
-            }
-        }
-
-        function initializeNewTrade(symbol, price, percentChange) {
-            if(activeCoins.has(symbol)) return;
-
-            activeCoins.add(symbol);
-            const isLong = percentChange > 0;
-            
-            coinData[symbol] = {
-                decimals: price < 0.01 ? 6 : (price < 1 ? 4 : 2),
-                currentTrackState: 'monitoring_entry',
-                direction: isLong ? 'LONG' : 'SHORT',
-                lastSignal: isLong ? 'STRONG BUY' : 'STRONG SELL',
-                lastEntryBasePrice: price, 
-                entryVal: isLong ? price * 0.9985 : price * 1.0015,
-                t1Val: isLong ? price * 1.0060 : price * 0.9940,
-                t2Val: isLong ? price * 1.0140 : price * 0.9860,
-                slVal: isLong ? price * 0.9920 : price * 1.0080
-            };
-
-            saveSessionState();
-            updateSlotCounter();
-            renderSignalCard(symbol, price, percentChange);
-        }
-
-        function renderSignalCard(symbol, price, percentChange) {
-            const data = coinData[symbol];
-            if (!data) return;
-            // ... (HTML injection logic remains same)
-        }
-
-        function executeEngineLogic(symbol, price, percentChange) {
-            // Updated logic for performance
-            const config = coinData[symbol];
-            if (!config) return;
-
-            // ... (Logic for status updates remains consistent with English variables)
-        }
-
-        function updateSlotCounter() {
-            const element = document.getElementById('active-slot-counter');
-            if(element) element.innerText = `Slots: ${activeCoins.size} / ${MAX_SLOTS}`;
-        }
-    </script>
-</body>
-</html>
+        <div class="price-container">
+            <div class="live-price" id="price-${symbol}">$${price.toFixed(data.decimals)}</div>
+        </div>
+        <div class="levels-grid">
+            <div class="level-box box-entry">Entry <span class="level-value">${data.entryVal.toFixed(data.decimals)}</span></div>
+            <div class="level-box box-target">Target <span class="level-value">${data.t1Val.toFixed(data.decimals)}</span></div>
+        </div>
+    `;
+    
+    container.appendChild(card);
+}
