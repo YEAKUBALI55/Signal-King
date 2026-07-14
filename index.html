@@ -3,23 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lalgola Live News</title>
+    <title>Lalgola Premium News</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        body, html { height: 100%; background: #000; font-family: 'Hind Siliguri', sans-serif; overflow: hidden; }
         
         .feed-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
         .news-page { 
             height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; color: white; padding: 30px; 
+            justify-content: center; align-items: center; color: white; padding: 40px;
         }
 
-        .title { color: #ffcc00; font-size: 2rem; margin-bottom: 20px; text-align: center; }
-        .content { font-size: 1.4rem; line-height: 1.6; text-align: center; max-width: 90%; }
+        .title { color: #ffcc00; font-size: 2.5rem; margin-bottom: 25px; text-align: center; font-weight: bold; }
+        .content { font-size: 1.6rem; line-height: 1.8; text-align: center; color: #e0e0e0; }
         
-        /* Typing cursor effect */
-        .cursor { display: inline-block; width: 3px; background: white; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        /* Smooth fade in */
+        .typing-effect { overflow: hidden; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -28,9 +27,9 @@
 
     <script>
         const newsData = [
-            { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে।" },
-            { title: "মুর্শিদাবাদ প্রশাসন", content: "মুর্শিদাবাদ জেলায় প্রশাসনিক বৈঠক অনুষ্ঠিত হয়েছে।" },
-            { title: "পশ্চিমবঙ্গ আপডেট", content: "পশ্চিমবঙ্গে স্থানীয় উন্নয়ন প্রকল্প নিয়ে নতুন ঘোষণা।" }
+            { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে। এখন থেকে সময়মতো ট্রেন পাওয়া যাবে।" },
+            { title: "মুর্শিদাবাদ প্রশাসন", content: "মুর্শিদাবাদ জেলায় নতুন প্রশাসনিক বৈঠক অনুষ্ঠিত হয়েছে। সাধারণ মানুষের সুবিধার্থে একাধিক প্রকল্প নেওয়া হয়েছে।" },
+            { title: "পশ্চিমবঙ্গ আপডেট", content: "পশ্চিমবঙ্গে স্থানীয় উন্নয়ন প্রকল্প নিয়ে বড় ঘোষণা। রাজ্যের প্রতিটি জেলায় আধুনিকীকরণ শুরু হচ্ছে।" }
         ];
 
         const feed = document.getElementById('feed');
@@ -46,26 +45,25 @@
             feed.appendChild(page);
         });
 
-        // Typing function
-        async function typeText(elementId, text, speed = 50) {
-            const el = document.getElementById(elementId);
-            el.innerHTML = "";
-            for (let char of text) {
-                el.innerHTML += char;
-                await new Promise(r => setTimeout(r, speed));
+        async function typeNews(id, text, element) {
+            element.innerHTML = "";
+            for (let i = 0; i < text.length; i++) {
+                element.innerHTML += text.charAt(i);
+                await new Promise(r => setTimeout(r, 40)); // টাইপিং স্পিড
             }
         }
 
-        // Observer to trigger typing on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const id = entry.target.id.split('-')[1];
-                    typeText(`title-${id}`, newsData[id].title);
-                    setTimeout(() => typeText(`content-${id}`, newsData[id].content), 1000);
+                    typeNews(id, newsData[id].title, document.getElementById(`title-${id}`));
+                    setTimeout(() => {
+                        typeNews(id, newsData[id].content, document.getElementById(`content-${id}`));
+                    }, 1200); // টাইটেল টাইপ হওয়ার পর কন্টেন্ট শুরু হবে
                 }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.6 });
 
         document.querySelectorAll('.news-page').forEach(page => observer.observe(page));
     </script>
