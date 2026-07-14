@@ -2,38 +2,62 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Market Chart</title>
+    <title>Mini Carrom Board</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #ffffff; overflow: hidden; }
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #3c2f2f; }
+        canvas { border: 15px solid #5d4037; background: #d7ccc8; cursor: crosshair; }
     </style>
 </head>
 <body>
 
-    <!-- TradingView Widget -->
-    <div class="tradingview-widget-container" id="chart-container" style="width:100%;height:100%;">
-        <div id="tradingview_chart" style="width:100%;height:100%;"></div>
-    </div>
+<canvas id="carromBoard" width="500" height="500"></canvas>
 
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script type="text/javascript">
-        new TradingView.widget({
-            "container_id": "tradingview_chart",
-            "autosize": true,
-            "symbol": "BINANCE:BTCUSDT",
-            "interval": "15",
-            "timezone": "Etc/UTC",
-            "theme": "light",
-            "style": "1",
-            "locale": "en",
-            "toolbar_bg": "#ffffff",
-            "enable_publishing": false,
-            "hide_top_toolbar": false, // এখানে toolbar অন করে দিলাম যাতে আপনি সব কয়েন ও টাইমফ্রেম পান
-            "hide_legend": true,
-            "save_image": false,
-            "withdateranges": true,
-            "studies": [] // ভলিউম ইন্ডিকেটর এখানে নেই, একদম ক্লিন
-        });
-    </script>
+<script>
+    const canvas = document.getElementById('carromBoard');
+    const ctx = canvas.getContext('2d');
+
+    // বোর্ড ড্র করা
+    function drawBoard() {
+        // বর্ডার ও পকেট
+        ctx.fillStyle = "#d7ccc8";
+        ctx.fillRect(0, 0, 500, 500);
+        
+        ctx.fillStyle = "black";
+        ctx.beginPath(); ctx.arc(25, 25, 20, 0, Math.PI*2); ctx.fill(); // পকেট ১
+        ctx.beginPath(); ctx.arc(475, 25, 20, 0, Math.PI*2); ctx.fill(); // পকেট ২
+        ctx.beginPath(); ctx.arc(25, 475, 20, 0, Math.PI*2); ctx.fill(); // পকেট ৩
+        ctx.beginPath(); ctx.arc(475, 475, 20, 0, Math.PI*2); ctx.fill(); // পকেট ৪
+        
+        // মাঝের ডিজাইন
+        ctx.strokeStyle = "brown";
+        ctx.strokeRect(50, 50, 400, 400);
+        ctx.beginPath(); ctx.arc(250, 250, 50, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // স্ট্রাইকার ড্র করা
+    let x = 250, y = 400;
+    function drawStriker() {
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI*2); ctx.fill();
+        ctx.stroke();
+    }
+
+    // মুভমেন্ট হ্যান্ডেলিং ( মাউস বা টাচ দিয়ে)
+    canvas.addEventListener('mousemove', (e) => {
+        let rect = canvas.getBoundingClientRect();
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+        update();
+    });
+
+    function update() {
+        ctx.clearRect(0, 0, 500, 500);
+        drawBoard();
+        drawStriker();
+    }
+
+    drawBoard();
+    drawStriker();
+</script>
 </body>
 </html>
