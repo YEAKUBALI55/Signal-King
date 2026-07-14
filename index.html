@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Murshidabad Premium News</title>
+<title>মুর্শিদাবাদ লাইভ নিউজ</title>
 <style>
-    /* Premium Styling */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     
     body {
         background: radial-gradient(circle at top right, #1a1a2e, #16213e, #0f3460);
@@ -23,68 +22,64 @@
         max-width: 600px;
         text-align: center;
         margin-bottom: 30px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 20px;
+        position: sticky;
+        top: 0;
+        background: rgba(15, 52, 96, 0.9);
+        padding: 20px;
+        border-radius: 0 0 20px 20px;
+        backdrop-filter: blur(15px);
+        z-index: 100;
     }
 
-    .header h1 { font-size: 28px; letter-spacing: 1px; color: #4ecca3; }
+    .header h1 { font-size: 24px; color: #4ecca3; }
 
     .news-container { width: 100%; max-width: 600px; }
 
     .news-card {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         padding: 25px;
         border-radius: 20px;
         margin-bottom: 25px;
-        transition: transform 0.3s ease;
+        box-shadow: 0 8px 32px 0 rgba(0,0,0,0.3);
     }
 
-    .news-card:hover { transform: scale(1.02); }
+    h2 { font-size: 20px; margin-bottom: 12px; color: #fff; line-height: 1.4; border-left: 4px solid #4ecca3; padding-left: 10px; }
+    p { font-size: 16px; color: #ddd; line-height: 1.6; margin-bottom: 15px; }
 
-    h2 { font-size: 22px; margin-bottom: 15px; color: #fff; line-height: 1.4; }
-    p { font-size: 17px; color: #ccc; line-height: 1.7; margin-bottom: 20px; }
-
-    .meta {
-        font-size: 13px;
-        color: #4ecca3;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    .meta { font-size: 12px; color: #4ecca3; font-weight: bold; margin-bottom: 10px; display: block; }
 </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>মুর্শিদাবাদ লাইভ আপডেট</h1>
+        <h1>মুর্শিদাবাদ অফিশিয়াল নিউজ</h1>
     </div>
 
     <div class="news-container" id="news-container"></div>
 
 <script>
+    // এখানে প্রতিদিনের নতুন খবর যোগ করুন। নতুন খবর উপরে যোগ করলে তা অটোমেটিক সবার আগে দেখাবে।
     const newsData = [
-        { title: "মুর্শিদাবাদে নতুন প্রশাসনিক ভবন", desc: "মুর্শিদাবাদ জেলায় সাধারণ মানুষের কাজের সুবিধার জন্য আজ নতুন প্রশাসনিক ভবনের উদ্বোধন করা হলো।" },
-        { title: "লালগোলায় সেচ ব্যবস্থার উন্নতি", desc: "লালগোলা ব্লকের বিস্তীর্ণ এলাকায় কৃষি জমিকে জলসেচের আওতায় আনতে নতুন খাল খননের কাজ শুরু হয়েছে।" },
-        { title: "বহরমপুর বইমেলা শুরু", desc: "বহরমপুর ব্যারাক স্কোয়ার মাঠে আজ থেকে শুরু হয়েছে জেলা বইমেলা, চলবে আগামী এক সপ্তাহ।" }
+        { title: "আজকের ব্রেকিং: মুর্শিদাবাদে বড় উন্নয়ন", desc: "নতুন সরকারি ঘোষণা অনুযায়ী মুর্শিদাবাদ জেলার শিক্ষা ও স্বাস্থ্য ব্যবস্থায় বড় পরিবর্তন আসছে।" },
+        { title: "বহরমপুর বইমেলা সমাপ্তি", desc: "সাফল্যের সাথে শেষ হলো বহরমপুর জেলা বইমেলা, মানুষের বিপুল সমাগম দেখা গেছে।" },
+        { title: "মুর্শিদাবাদে নতুন প্রশাসনিক ভবন", desc: "মুর্শিদাবাদ জেলায় সাধারণ মানুষের কাজের সুবিধার জন্য আজ নতুন প্রশাসনিক ভবনের উদ্বোধন করা হলো।" }
     ];
 
     const container = document.getElementById("news-container");
     const date = new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
 
+    // নিউজ রেন্ডার করা
     newsData.forEach(item => {
         container.innerHTML += `
             <div class="news-card">
-                <div class="meta">মুর্শিদাবাদ ডেইলি নিউজ • ${date}</div>
+                <span class="meta">মুর্শিদাবাদ অফিশিয়াল • ${date}</span>
                 <h2>${item.title}</h2>
                 <p>${item.desc}</p>
             </div>
         `;
     });
-
-    // 30 Seconds auto-refresh
-    setInterval(() => { location.reload(); }, 30000);
 </script>
 
 </body>
