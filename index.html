@@ -1,43 +1,64 @@
-import ccxt
-import time
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lalgola Premium News</title>
+    <style>
+        /* Premium Full Screen Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; overflow: hidden; font-family: 'Arial', sans-serif; }
 
-# --- CONFIGURATION (Keep these secret!) ---
-# Use an environment variable or a secure vault in a real app.
-API_KEY = 'YOUR_API_KEY_HERE'
-SECRET_KEY = 'YOUR_SECRET_KEY_HERE'
-SYMBOL = 'BTC/USDT'
-TRADE_AMOUNT = 0.001 # Amount in BTC
+        /* Smooth Vertical Snap Container */
+        .feed-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
 
-def get_exchange():
-    return ccxt.binance({
-        'apiKey': API_KEY,
-        'secret': SECRET_KEY,
-        'enableRateLimit': True,
-        'options': {'defaultType': 'future'}
-    })
+        /* Each News Page */
+        .news-page {
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, #1a1a1a, #000);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
 
-def run_bot():
-    exchange = get_exchange()
-    print("Bot started...")
-    
-    while True:
-        try:
-            # 1. Fetch current market price
-            ticker = exchange.fetch_ticker(SYMBOL)
-            price = ticker['last']
-            print(f"Current price of {SYMBOL}: {price}")
+        .news-title { font-size: 1.8rem; margin-bottom: 20px; color: #ffcc00; }
+        .news-content { font-size: 1.2rem; line-height: 1.6; max-width: 80%; }
+    </style>
+</head>
+<body>
 
-            # 2. Add your logic here
-            # Example: Simple logic
-            # if price < 50000:
-            #     print("Placing Buy Order...")
-            #     # exchange.create_market_buy_order(SYMBOL, TRADE_AMOUNT)
+    <div class="feed-container" id="news-feed">
+        <!-- News items will be injected here via JavaScript -->
+    </div>
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        
-        # 3. Wait before next check
-        time.sleep(60)
+    <script>
+        // Sample data - In a real app, fetch this from your Python Backend
+        const newsData = [
+            { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে।" },
+            { title: "মুর্শিদাবাদ প্রশাসন", content: "মুর্শিদাবাদ জেলায় প্রশাসনিক বৈঠক অনুষ্ঠিত হয়েছে।" },
+            { title: "পশ্চিমবঙ্গ আপডেট", content: "পশ্চিমবঙ্গে স্থানীয় উন্নয়ন প্রকল্প নিয়ে নতুন ঘোষণা।" }
+        ];
 
-if __name__ == "__main__":
-    run_bot()
+        const container = document.getElementById('news-feed');
+
+        newsData.forEach(item => {
+            const page = document.createElement('div');
+            page.className = 'news-page';
+            page.innerHTML = `
+                <h1 class="news-title">${item.title}</h1>
+                <p class="news-content">${item.content}</p>
+            `;
+            container.appendChild(page);
+        });
+    </script>
+</body>
+</html>
