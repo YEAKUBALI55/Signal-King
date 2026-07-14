@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lalgola Premium News</title>
+    <title>Lalgola Live News Feed</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body, html { height: 100%; background: #000; font-family: 'Hind Siliguri', sans-serif; overflow: hidden; }
@@ -11,14 +11,12 @@
         .feed-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
         .news-page { 
             height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; color: white; padding: 40px;
+            justify-content: center; align-items: center; color: white; padding: 40px; 
+            background: linear-gradient(180deg, #111, #000);
         }
 
-        .title { color: #ffcc00; font-size: 2.5rem; margin-bottom: 25px; text-align: center; font-weight: bold; }
-        .content { font-size: 1.6rem; line-height: 1.8; text-align: center; color: #e0e0e0; }
-        
-        /* Smooth fade in */
-        .typing-effect { overflow: hidden; white-space: pre-wrap; }
+        .title { color: #ffcc00; font-size: 2.2rem; margin-bottom: 25px; text-align: center; }
+        .content { font-size: 1.4rem; line-height: 1.8; text-align: center; color: #eee; }
     </style>
 </head>
 <body>
@@ -26,46 +24,51 @@
     <div class="feed-container" id="feed"></div>
 
     <script>
-        const newsData = [
-            { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে। এখন থেকে সময়মতো ট্রেন পাওয়া যাবে।" },
-            { title: "মুর্শিদাবাদ প্রশাসন", content: "মুর্শিদাবাদ জেলায় নতুন প্রশাসনিক বৈঠক অনুষ্ঠিত হয়েছে। সাধারণ মানুষের সুবিধার্থে একাধিক প্রকল্প নেওয়া হয়েছে।" },
-            { title: "পশ্চিমবঙ্গ আপডেট", content: "পশ্চিমবঙ্গে স্থানীয় উন্নয়ন প্রকল্প নিয়ে বড় ঘোষণা। রাজ্যের প্রতিটি জেলায় আধুনিকীকরণ শুরু হচ্ছে।" }
-        ];
-
-        const feed = document.getElementById('feed');
-
-        newsData.forEach((news, index) => {
-            const page = document.createElement('div');
-            page.className = 'news-page';
-            page.id = `page-${index}`;
-            page.innerHTML = `
-                <h1 class="title" id="title-${index}"></h1>
-                <p class="content" id="content-${index}"></p>
-            `;
-            feed.appendChild(page);
-        });
-
-        async function typeNews(id, text, element) {
-            element.innerHTML = "";
-            for (let i = 0; i < text.length; i++) {
-                element.innerHTML += text.charAt(i);
-                await new Promise(r => setTimeout(r, 40)); // টাইপিং স্পিড
+        // আপনার সার্ভার থেকে লাইভ ডেটা আনার ফাংশন
+        async function fetchNews() {
+            try {
+                // এখানে আপনার সার্ভারের URL বসান
+                const response = await fetch('YOUR_SERVER_URL/get-live-news');
+                const data = await response.json();
+                renderNews(data.news);
+            } catch (error) {
+                console.log("Offline mode: using sample data");
+                renderNews([
+                    { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে।" },
+                    { title: "মুর্শিদাবাদ আপডেট", content: "মুর্শিদাবাদ জেলায় নতুন উন্নয়ন প্রকল্প শুরু হয়েছে।" }
+                ]);
             }
         }
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const id = entry.target.id.split('-')[1];
-                    typeNews(id, newsData[id].title, document.getElementById(`title-${id}`));
-                    setTimeout(() => {
-                        typeNews(id, newsData[id].content, document.getElementById(`content-${id}`));
-                    }, 1200); // টাইটেল টাইপ হওয়ার পর কন্টেন্ট শুরু হবে
-                }
+        function renderNews(newsList) {
+            const feed = document.getElementById('feed');
+            newsList.forEach((news, index) => {
+                const page = document.createElement('div');
+                page.className = 'news-page';
+                page.id = `page-${index}`;
+                page.innerHTML = `<h1 class="title" id="title-${index}"></h1><p class="content" id="content-${index}"></p>`;
+                feed.appendChild(page);
+                
+                // স্ক্রল করলে টাইপিং ট্রিগার হবে
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        typeText(`title-${index}`, news.title, 50);
+                        setTimeout(() => typeText(`content-${index}`, news.content, 30), 1000);
+                    }
+                }, { threshold: 0.6 });
+                observer.observe(page);
             });
-        }, { threshold: 0.6 });
+        }
 
-        document.querySelectorAll('.news-page').forEach(page => observer.observe(page));
+        async function typeText(id, text, speed) {
+            const el = document.getElementById(id);
+            for (let char of text) {
+                el.innerHTML += char;
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+
+        fetchNews();
     </script>
 </body>
 </html>
