@@ -2,27 +2,59 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Airdrops List</title>
+    <title>My Chat App</title>
+    <!-- Firebase SDK লোড করা হচ্ছে -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // আপনার Firebase কনফিগারেশন এখানে বসান
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // মেসেজ পাঠানো
+        document.getElementById('send-btn').onclick = async () => {
+            const input = document.getElementById('msg-input');
+            if (input.value.trim() !== "") {
+                await addDoc(collection(db, "messages"), {
+                    text: input.value,
+                    createdAt: serverTimestamp()
+                });
+                input.value = "";
+            }
+        };
+
+        // রিয়েল-টাইমে মেসেজ দেখা
+        const q = query(collection(db, "messages"), orderBy("createdAt"));
+        onSnapshot(q, (snapshot) => {
+            const container = document.getElementById('chat-box');
+            container.innerHTML = "";
+            snapshot.forEach(doc => {
+                const msgDiv = document.createElement('div');
+                msgDiv.innerText = doc.data().text;
+                container.appendChild(msgDiv);
+            });
+        });
+    </script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .card { background: #1e1e1e; padding: 15px; margin: 10px 0; border-radius: 8px; }
-        .btn { background: #007bff; color: white; padding: 10px; text-decoration: none; border-radius: 5px; display: inline-block; }
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        #chat-box { width: 300px; height: 400px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <h1>Latest Crypto Airdrops</h1>
-    
-    <div class="card">
-        <h3>Project Name 1</h3>
-        <p>Details: Join to get free tokens.</p>
-        <a href="YOUR_REFERRAL_LINK_HERE" class="btn">Join Airdrop</a>
-    </div>
-
-    <div class="card">
-        <h3>Project Name 2</h3>
-        <p>Details: Limited time offer.</p>
-        <a href="YOUR_REFERRAL_LINK_HERE" class="btn">Join Airdrop</a>
+    <div>
+        <div id="chat-box"></div>
+        <input type="text" id="msg-input" placeholder="লিখুন...">
+        <button id="send-btn">পাঠান</button>
     </div>
 </body>
 </html>
