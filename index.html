@@ -1,51 +1,33 @@
 <!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binance Portfolio Monitor</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 text-white p-6">
+<html>
+<body>
 
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-yellow-500">Binance পোর্টফোলিও মনিটর</h1>
-
-        <!-- ব্যালেন্স টেবিল -->
-        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-gray-700">
-                    <tr>
-                        <th class="p-4">কারেন্সি (Asset)</th>
-                        <th class="p-4">পরিমাণ (Balance)</th>
-                    </tr>
-                </thead>
-                <tbody id="crypto-data">
-                    <!-- এখানে ব্যাকএন্ড থেকে ডেটা লোড হবে -->
-                    <tr>
-                        <td class="p-4 border-b border-gray-600">BTC</td>
-                        <td class="p-4 border-b border-gray-600">0.05</td>
-                    </tr>
-                    <tr>
-                        <td class="p-4">USDT</td>
-                        <td class="p-4">1200.50</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mt-6">
-            <button onclick="refreshData()" class="bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded">
-                রিফ্রেশ ডেটা
-            </button>
-        </div>
-    </div>
+    <h2>Local Media Preview</h2>
+    <input type="file" id="fileInput" accept="image/*,video/*">
+    
+    <div id="displayArea" style="margin-top: 20px;"></div>
 
     <script>
-        function refreshData() {
-            alert("এখানে আপনার ব্যাকএন্ড API থেকে ডেটা রিফ্রেশ করার কোড যুক্ত হবে।");
-        }
+        const fileInput = document.getElementById('fileInput');
+        const displayArea = document.getElementById('displayArea');
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    if (file.type.startsWith('image/')) {
+                        displayArea.innerHTML = `<img src="${e.target.result}" style="max-width: 300px;">`;
+                    } else if (file.type.startsWith('video/')) {
+                        displayArea.innerHTML = `<video src="${e.target.result}" controls style="max-width: 300px;"></video>`;
+                    }
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
+
 </body>
 </html>
