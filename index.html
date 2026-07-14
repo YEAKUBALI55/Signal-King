@@ -14,7 +14,6 @@
     .news h2{ padding:15px 15px 5px; font-size:24px; }
     .news p{ padding:0 15px 10px; color:#ccc; font-size:17px; line-height:1.6; }
     
-    /* নতুন স্টাইল: সোর্স এবং তারিখের জন্য */
     .news-footer {
         padding: 0 15px 15px;
         font-size: 13px;
@@ -30,7 +29,6 @@
 <div class="container" id="news"></div>
 
 <script>
-    // আজকের তারিখ পাওয়ার ফাংশন
     const getFormattedDate = () => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date().toLocaleDateString('bn-BD', options);
@@ -58,7 +56,12 @@
             </div>
         `;
     });
-</script>
 
+    // অটো-রিফ্রেশ স্ক্রিপ্ট (৩০ সেকেন্ড পর পর)
+    setInterval(function() {
+        location.reload();
+    }, 30000); 
+
+</script>
 </body>
 </html>
