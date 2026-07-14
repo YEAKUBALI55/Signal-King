@@ -3,62 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lalgola Premium News</title>
+    <title>Lalgola Live News</title>
     <style>
-        /* Premium Full Screen Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html { height: 100%; overflow: hidden; font-family: 'Arial', sans-serif; }
-
-        /* Smooth Vertical Snap Container */
-        .feed-container {
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
+        body, html { height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        
+        .feed-container { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .news-page { 
+            height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; color: white; padding: 30px; 
         }
 
-        /* Each News Page */
-        .news-page {
-            height: 100vh;
-            scroll-snap-align: start;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(180deg, #1a1a1a, #000);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .news-title { font-size: 1.8rem; margin-bottom: 20px; color: #ffcc00; }
-        .news-content { font-size: 1.2rem; line-height: 1.6; max-width: 80%; }
+        .title { color: #ffcc00; font-size: 2rem; margin-bottom: 20px; text-align: center; }
+        .content { font-size: 1.4rem; line-height: 1.6; text-align: center; max-width: 90%; }
+        
+        /* Typing cursor effect */
+        .cursor { display: inline-block; width: 3px; background: white; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <div class="feed-container" id="news-feed">
-        <!-- News items will be injected here via JavaScript -->
-    </div>
+    <div class="feed-container" id="feed"></div>
 
     <script>
-        // Sample data - In a real app, fetch this from your Python Backend
         const newsData = [
             { title: "লালগোলার খবর", content: "লালগোলা স্টেশনে নতুন ট্রেনের সময়সূচী আপডেট করা হয়েছে।" },
             { title: "মুর্শিদাবাদ প্রশাসন", content: "মুর্শিদাবাদ জেলায় প্রশাসনিক বৈঠক অনুষ্ঠিত হয়েছে।" },
             { title: "পশ্চিমবঙ্গ আপডেট", content: "পশ্চিমবঙ্গে স্থানীয় উন্নয়ন প্রকল্প নিয়ে নতুন ঘোষণা।" }
         ];
 
-        const container = document.getElementById('news-feed');
+        const feed = document.getElementById('feed');
 
-        newsData.forEach(item => {
+        newsData.forEach((news, index) => {
             const page = document.createElement('div');
             page.className = 'news-page';
+            page.id = `page-${index}`;
             page.innerHTML = `
-                <h1 class="news-title">${item.title}</h1>
-                <p class="news-content">${item.content}</p>
+                <h1 class="title" id="title-${index}"></h1>
+                <p class="content" id="content-${index}"></p>
             `;
-            container.appendChild(page);
+            feed.appendChild(page);
         });
+
+        // Typing function
+        async function typeText(elementId, text, speed = 50) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = "";
+            for (let char of text) {
+                el.innerHTML += char;
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+
+        // Observer to trigger typing on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id.split('-')[1];
+                    typeText(`title-${id}`, newsData[id].title);
+                    setTimeout(() => typeText(`content-${id}`, newsData[id].content), 1000);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.news-page').forEach(page => observer.observe(page));
     </script>
 </body>
 </html>
