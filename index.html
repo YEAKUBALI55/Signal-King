@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>মুর্শিদাবাদ লাইভ নিউজ</title>
+<title>Murshidabad Official News</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
     
@@ -17,23 +17,10 @@
         padding: 20px;
     }
 
-    .header {
-        width: 100%;
-        max-width: 600px;
-        text-align: center;
-        margin-bottom: 30px;
-        position: sticky;
-        top: 0;
-        background: rgba(15, 52, 96, 0.9);
-        padding: 20px;
-        border-radius: 0 0 20px 20px;
-        backdrop-filter: blur(15px);
-        z-index: 100;
-    }
+    /* Header removed (Title area), keeping space for clean look */
+    .spacer { height: 20px; }
 
-    .header h1 { font-size: 24px; color: #4ecca3; }
-
-    .news-container { width: 100%; max-width: 600px; }
+    .news-container { width: 100%; max-width: 600px; margin-top: 10px; }
 
     .news-card {
         background: rgba(255, 255, 255, 0.08);
@@ -48,33 +35,34 @@
     h2 { font-size: 20px; margin-bottom: 12px; color: #fff; line-height: 1.4; border-left: 4px solid #4ecca3; padding-left: 10px; }
     p { font-size: 16px; color: #ddd; line-height: 1.6; margin-bottom: 15px; }
 
-    .meta { font-size: 12px; color: #4ecca3; font-weight: bold; margin-bottom: 10px; display: block; }
+    .meta { font-size: 12px; color: #4ecca3; font-weight: bold; margin-bottom: 10px; display: block; letter-spacing: 0.5px; }
 </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>মুর্শিদাবাদ অফিশিয়াল নিউজ</h1>
-    </div>
+    <div class="spacer"></div>
 
     <div class="news-container" id="news-container"></div>
 
 <script>
-    // এখানে প্রতিদিনের নতুন খবর যোগ করুন। নতুন খবর উপরে যোগ করলে তা অটোমেটিক সবার আগে দেখাবে।
+    // এখানে খবরগুলো আপডেট করুন। সবার উপরেরটি সবার আগে দেখাবে।
     const newsData = [
-        { title: "আজকের ব্রেকিং: মুর্শিদাবাদে বড় উন্নয়ন", desc: "নতুন সরকারি ঘোষণা অনুযায়ী মুর্শিদাবাদ জেলার শিক্ষা ও স্বাস্থ্য ব্যবস্থায় বড় পরিবর্তন আসছে।" },
-        { title: "বহরমপুর বইমেলা সমাপ্তি", desc: "সাফল্যের সাথে শেষ হলো বহরমপুর জেলা বইমেলা, মানুষের বিপুল সমাগম দেখা গেছে।" },
-        { title: "মুর্শিদাবাদে নতুন প্রশাসনিক ভবন", desc: "মুর্শিদাবাদ জেলায় সাধারণ মানুষের কাজের সুবিধার জন্য আজ নতুন প্রশাসনিক ভবনের উদ্বোধন করা হলো।" }
+        { title: "Breaking: Development in Murshidabad", desc: "According to the latest government announcement, major changes are coming to the education and health systems of Murshidabad district." },
+        { title: "Berhampore Book Fair Conclusion", desc: "The Berhampore District Book Fair concluded successfully with a massive turnout of visitors." },
+        { title: "New Administrative Building", desc: "A new administrative building has been inaugurated today to facilitate the work of the people of Murshidabad district." }
     ];
 
     const container = document.getElementById("news-container");
-    const date = new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    // তারিখ এবং সময় ইংরেজি ফরম্যাটে
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-    // নিউজ রেন্ডার করা
     newsData.forEach(item => {
         container.innerHTML += `
             <div class="news-card">
-                <span class="meta">মুর্শিদাবাদ অফিশিয়াল • ${date}</span>
+                <span class="meta">MURSHIDABAD OFFICIAL • ${dateStr} | ${timeStr}</span>
                 <h2>${item.title}</h2>
                 <p>${item.desc}</p>
             </div>
