@@ -3,73 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yeakub Binance Pro Scanner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Yeakub Pro Trader</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-        body { background: #0f172a; color: #ffffff; height: 100vh; padding: 12px; }
-        .container { display: flex; flex-direction: column; gap: 10px; }
-        .coin-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .price-section { text-align: right; }
-        .price { font-size: 18px; font-weight: 800; }
-        .levels { font-size: 11px; margin-top: 4px; }
+        body { background: #0f172a; color: #ffffff; font-family: sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .coin-card { background: rgba(255, 255, 255, 0.05); border: 1px solid #334155; border-radius: 16px; padding: 15px; margin-bottom: 10px; }
+        .price { font-size: 24px; font-weight: 800; }
+        .levels { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; font-weight: bold; }
         .tp { color: #00c853; }
         .sl { color: #ff3d00; }
+        .meta { font-size: 10px; color: #64748b; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="container" id="dashboard-container">
-        <div id="status-text">Scanning...</div>
+        <h2 style="text-align: center; margin-bottom: 20px;">Pro Momentum Scanner</h2>
     </div>
 
     <script>
         const targetCoins = ['BTC','ETH','BNB','SOL','XRP','ADA','AVAX','MATIC','LINK','DOT'];
         const leverage = 5;
 
-        // নতুন ক্যালকুলেশন লজিক (5x লেভারেজ অনুযায়ী)
-        function calculateLevels(price) {
-            const tpPrice = price * (1 + (0.07 / leverage)); // ৭% প্রফিট পেতে মার্কেটে ১.৪% মুভমেন্ট
-            const slPrice = price * (1 - (0.05 / leverage)); // ৫% লস হতে মার্কেটে ১% মুভমেন্ট
-            return { tp: tpPrice.toFixed(4), sl: slPrice.toFixed(4) };
-        }
-
         async function checkMomentumSetup(coin) {
-            const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=2`);
-            const data = await res.json();
-            const yOpen = parseFloat(data[0][1]), yClose = parseFloat(data[0][4]);
-            const tOpen = parseFloat(data[1][1]), tClose = parseFloat(data[1][4]);
-            return (yClose > yOpen && tClose > tOpen && tClose >= (yOpen + (yClose - yOpen) * 0.5));
+            try {
+                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=2`);
+                const data = await res.json();
+                const yOpen = parseFloat(data[0][1]), yClose = parseFloat(data[0][4]);
+                const tOpen = parseFloat(data[1][1]), tClose = parseFloat(data[1][4]);
+                return (yClose > yOpen && tClose > tOpen && tClose >= (yOpen + (yClose - yOpen) * 0.5));
+            } catch { return false; }
         }
 
         async function initScanner() {
             for(let coin of targetCoins) {
                 if(await checkMomentumSetup(coin)) {
-                    const container = document.getElementById('dashboard-container');
-                    container.innerHTML += `
+                    document.getElementById('dashboard-container').innerHTML += `
                         <div class="coin-card" id="card-${coin}">
                             <div><strong>${coin}</strong></div>
-                            <div class="price-section">
-                                <div class="price" id="price-${coin}">Loading...</div>
-                                <div class="levels" id="levels-${coin}"></div>
+                            <div class="price" id="price-${coin}">Loading...</div>
+                            <div class="levels">
+                                <span class="tp" id="tp-${coin}">TP: --</span>
+                                <span class="sl" id="sl-${coin}">SL: --</span>
                             </div>
+                            <div class="meta">Leverage: 5x | Target: 7% | Risk: 5%</div>
                         </div>
                     `;
                     connectStream(coin);
                 }
             }
-            document.getElementById('status-text').style.display = 'none';
         }
 
         function connectStream(coin) {
             const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${coin.toLowerCase()}usdt@ticker`);
             ws.onmessage = (e) => {
                 const p = parseFloat(JSON.parse(e.data).c);
-                const lv = calculateLevels(p);
+                // 5x leverage: 7% Profit = 1.4% move, 5% Loss = 1% move
+                const tp = p * 1.014;
+                const sl = p * 0.99;
+                
                 document.getElementById(`price-${coin}`).innerText = `$${p.toFixed(4)}`;
-                document.getElementById(`levels-${coin}`).innerHTML = `
-                    <span class="tp">TP: $${lv.tp}</span> | <span class="sl">SL: $${lv.sl}</span>
-                `;
+                document.getElementById(`tp-${coin}`).innerText = `TP: $${tp.toFixed(4)}`;
+                document.getElementById(`sl-${coin}`).innerText = `SL: $${sl.toFixed(4)}`;
             };
         }
 
