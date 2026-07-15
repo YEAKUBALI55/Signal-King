@@ -111,7 +111,6 @@
     </div>
 
     <script>
-        // Binance high volume market coins list
         const targetCoins = [
             'BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','SHIB','AVAX','LINK','LTC','MATIC','UNI','BCH',
             'FIL','XLM','ATOM','ETC','HBAR','ICP','GRT','AAVE','NEAR','ALGO','QNT','FLOW','EGLD','SAND','MANA',
@@ -120,22 +119,23 @@
 
         const MAX_COINS = 5;
         let lastPrices = {};
-        let sockets = []; // Store multiple live socket references
+        let sockets = [];
 
         function getTodayDateString() {
             const d = new Date();
             return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
         }
 
-        // 1. Strict Candle Condition Checker
         async function checkMomentumSetup(coin) {
             try {
-                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=3`);
+                // Fetching 20 days for Support Level calculation
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=20`);
                 const data = await response.json();
 
-                if (data && data.length >= 2) {
+                if (data && data.length >= 20) {
                     const yOpen = parseFloat(data[data.length - 2][1]);
                     const yClose = parseFloat(data[data.length - 2][4]);
+                    const yLow = parseFloat(data[data.length - 2][3]);
 
                     const tOpen = parseFloat(data[data.length - 1][1]);
                     const tClose = parseFloat(data[data.length - 1][4]);
@@ -147,7 +147,17 @@
                     const yesterdayFiftyPercentLevel = yOpen + (yesterdayBodyHeight * 0.5);
                     const isAboveFiftyPercent = tClose >= yesterdayFiftyPercentLevel;
 
-                    if (isYesterdayGreen && isTodayGreen && isAboveFiftyPercent) {
+                    // Support Level Calculation (Lowest Low of last 20 days)
+                    let minLow = parseFloat(data[0][3]);
+                    for(let i = 1; i < 20; i++) {
+                        let currentLow = parseFloat(data[i][3]);
+                        if(currentLow < minLow) minLow = currentLow;
+                    }
+                    
+                    // Support check: Yesterday's low must be near the 20-day minimum (within 2% margin)
+                    const isAtSupport = yLow <= (minLow * 1.02);
+
+                    if (isYesterdayGreen && isTodayGreen && isAboveFiftyPercent && isAtSupport) {
                         return true; 
                     }
                 }
@@ -157,10 +167,8 @@
             return false;
         }
 
-        // 2. Inject Coin Card & Instantly Initialize Dedicated Live Streaming Stream
         function createCoinCard(coin) {
             const container = document.getElementById('dashboard-container');
-
             if(document.getElementById(`card-${coin}`)) return;
 
             const card = document.createElement('div');
@@ -179,12 +187,9 @@
                 </div>
             `;
             container.appendChild(card);
-
-            // Connect dedicated individual stream for this specific card to prevent congestion bugs
             connectIndividualStream(coin);
         }
 
-        // 3. Robust Individual Stream Connector Engine
         function connectIndividualStream(coin) {
             const coinLower = coin.toLowerCase();
             const wsUrl = `wss://stream.binance.com:9443/ws/${coinLower}usdt@ticker`;
@@ -197,7 +202,6 @@
                 const priceEl = document.getElementById(`price-${coin}`);
 
                 if (priceEl) {
-                    // Dynamically set decimal places based on price size
                     let decimalPlaces = currentPrice < 1 ? 4 : (currentPrice < 10 ? 3 : 2);
                     let formattedPrice = currentPrice.toLocaleString(undefined, { 
                         minimumFractionDigits: decimalPlaces,
@@ -206,7 +210,6 @@
 
                     priceEl.innerText = `$${formattedPrice}`;
 
-                    // Dynamic price direction color flash system
                     if (lastPrices[coin]) {
                         if (currentPrice > lastPrices[coin]) {
                             priceEl.className = 'price price-up';
@@ -214,22 +217,14 @@
                             priceEl.className = 'price price-down';
                         }
                     }
-
                     setTimeout(() => { priceEl.className = 'price'; }, 800);
                     lastPrices[coin] = currentPrice;
                 }
             };
-
-            // Individual auto reconnect fallbacks
-            ws.onclose = () => {
-                setTimeout(() => { connectIndividualStream(coin); }, 3000);
-            };
-            ws.onerror = () => {
-                ws.close();
-            };
+            ws.onclose = () => { setTimeout(() => { connectIndividualStream(coin); }, 3000); };
+            ws.onerror = () => { ws.close(); };
         }
 
-        // Master Controller Routine
         async function initScanner() {
             const savedDate = localStorage.getItem('scan_date');
             const currentDate = getTodayDateString();
@@ -243,9 +238,7 @@
 
             if (savedCoins.length > 0) {
                 document.getElementById('status-text').style.display = 'none';
-                savedCoins.forEach(coin => {
-                    createCoinCard(coin);
-                });
+                savedCoins.forEach(coin => createCoinCard(coin));
             } else {
                 document.getElementById('status-text').innerText = "New Date. Scanning setups (Max 5)...";
                 let matchedCount = 0;
@@ -268,7 +261,6 @@
                 } else {
                     document.getElementById('status-text').innerText = "0 coins found matching setup today.";
                 }
-
                 localStorage.setItem('matched_coins', JSON.stringify(temporaryMatches));
             }
         }
