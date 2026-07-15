@@ -1,33 +1,35 @@
-<div class="card" onclick="alert('বিস্তারিত খবর শীঘ্রই যুক্ত করা হবে')">
-    <h2>🏛️ সরকারি সংবাদ</h2>
-    <div id="news" style="color: #555; margin-top: 10px;">
-        <!-- এখানে খবর লোড হবে -->
-        খবর লোড হচ্ছে...
+<div class="card">
+    <h2>🏛️ সরকারি সংবাদ (PIB Live)</h2>
+    <div id="news" style="color: #333; margin-top: 10px; line-height: 1.5;">
+        সংবাদ লোড হচ্ছে...
     </div>
 </div>
 
 <script>
-    async function fetchNews() {
+    async function fetchPibNews() {
         const newsContainer = document.getElementById('news');
-        const API_KEY = 'YOUR_API_KEY'; // এখানে আপনার সঠিক API Key দিন
-        const url = `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${API_KEY}`;
+        // PIB-এর RSS ফিডকে JSON-এ রূপান্তর করার জন্য একটি ফ্রি সার্ভিস ব্যবহার করা হয়েছে
+        const rssUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://pib.gov.in/RSSFeed.aspx";
 
         try {
-            let response = await fetch(url);
+            let response = await fetch(rssUrl);
             let data = await response.json();
             
-            if (data.articles && data.articles.length > 0) {
-                newsContainer.innerText = data.articles[0].title;
+            if (data.items && data.items.length > 0) {
+                // প্রথম ৫টি সংবাদ শিরোনাম দেখাবে
+                let html = "<ul>";
+                for(let i = 0; i < 5; i++) {
+                    html += `<li style="margin-bottom:10px;"><a href="${data.items[i].link}" target="_blank">${data.items[i].title}</a></li>`;
+                }
+                html += "</ul>";
+                newsContainer.innerHTML = html;
             } else {
-                newsContainer.innerText = "বর্তমানে কোনো নতুন সরকারি সংবাদ পাওয়া যায়নি।";
+                newsContainer.innerText = "বর্তমানে কোনো সংবাদ নেই।";
             }
         } catch (error) {
-            console.error("Error:", error);
-            // API কাজ না করলে বা নেটওয়ার্ক সমস্যা থাকলে এই টেক্সট দেখাবে
-            newsContainer.innerText = "সরকারি সংবাদ পোর্টালটি আপডেট করা হচ্ছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।";
+            newsContainer.innerText = "সংবাদ সার্ভার আপাতত ব্যস্ত।";
         }
     }
 
-    // ফাংশনটি কল করুন
-    fetchNews();
+    fetchPibNews();
 </script>
