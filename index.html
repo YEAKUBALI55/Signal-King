@@ -1,129 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yeakub Binance Momentum Scanner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>India Live Dashboard</title>
     <style>
-        /* [Keeping your original CSS exactly as is for consistency] */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); color: #ffffff; height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; padding: 12px; overflow: hidden; }
-        .gradient-border-box { width: 100%; height: 100%; background: linear-gradient(45deg, #00c853, #00e5ff, #a78bfa, #ff3d00); padding: 3px; border-radius: 24px; box-shadow: 0 10px 40px rgba(0, 200, 83, 0.2); display: flex; }
-        .container { width: 100%; height: 100%; background: #0f172a; border-radius: 21px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; overflow-y: auto; }
-        .status-msg { text-align: center; font-size: 14px; color: #64748b; padding: 10px; font-weight: 600; }
-        .coin-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 0 20px; min-height: 80px; display: flex; justify-content: space-between; align-items: center; }
-        .coin-info { display: flex; align-items: center; gap: 14px; }
-        .coin-icon { font-size: 26px; color: #00e5ff; }
-        .coin-name { font-size: 18px; font-weight: 700; }
-        .coin-pair { font-size: 12px; color: #64748b; display: block; }
-        .price { font-size: 22px; font-weight: 800; }
-        .price-up { color: #00c853; }
-        .price-down { color: #ff3d00; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        .data { font-size: 20px; font-weight: bold; color: #007bff; }
     </style>
 </head>
 <body>
+    <h1>Premium Dashboard</h1>
+    
+    <div class="card">
+        <h2>🇮🇳 ভারতের জনসংখ্যা (Live)</h2>
+        <div id="pop" class="data">Loading...</div>
+    </div>
 
-    <div class="gradient-border-box">
-        <div class="container" id="dashboard-container">
-            <div class="status-msg" id="status-text">Checking Saved Setup...</div>
-        </div>
+    <div class="card" onclick="alert('Details coming soon!')">
+        <h2>🏛️ সরকারি সংবাদ</h2>
+        <div id="news">শিরোনাম লোড হচ্ছে...</div>
     </div>
 
     <script>
-        const targetCoins = ['BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','SHIB','AVAX','LINK','LTC','MATIC','UNI','BCH','FIL','XLM','ATOM','ETC','HBAR','ICP','GRT','AAVE','NEAR','ALGO','QNT','FLOW','EGLD','SAND','MANA','THETA','EOS','AXS','XTZ','FTM','APE','GALA','MKR','CRV','OP','LDO','APT','ARB','INJ','TIA','SUI'];
-        const MAX_COINS = 5;
-        let lastPrices = {};
-        let sockets = [];
-
-        function getTodayDateString() {
-            return new Date().toISOString().split('T')[0];
-        }
-
-        // Logic remains as you requested
-        async function checkMomentumSetup(coin) {
-            try {
-                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=20`);
-                const data = await response.json();
-                if (!data || data.length < 20) return false;
-
-                const yOpen = parseFloat(data[data.length - 2][1]);
-                const yClose = parseFloat(data[data.length - 2][4]);
-                const yLow = parseFloat(data[data.length - 2][3]);
-                const tClose = parseFloat(data[data.length - 1][4]);
-
-                const isYesterdayGreen = yClose > yOpen;
-                const isTodayGreen = tClose > parseFloat(data[data.length - 1][1]);
-                const yesterdayBodyHeight = yClose - yOpen;
-                const isAboveFiftyPercent = tClose >= (yOpen + (yesterdayBodyHeight * 0.5));
-
-                let minLow = Math.min(...data.map(k => parseFloat(k[3])));
-                const isAtSupport = yLow <= (minLow * 1.02);
-
-                return (isYesterdayGreen && isTodayGreen && isAboveFiftyPercent && isAtSupport);
-            } catch (e) { return false; }
-        }
-
-        function createCoinCard(coin) {
-            const container = document.getElementById('dashboard-container');
-            if(document.getElementById(`card-${coin}`)) return;
-            const card = document.createElement('div');
-            card.className = 'coin-card';
-            card.id = `card-${coin}`;
-            card.innerHTML = `<div class="coin-info"><i class="fas fa-bolt coin-icon"></i><div><span class="coin-name">${coin}</span><span class="coin-pair">${coin} / USDT</span></div></div><div class="price-section"><div class="price" id="price-${coin}">...</div></div>`;
-            container.appendChild(card);
-            connectIndividualStream(coin);
-        }
-
-        function connectIndividualStream(coin) {
-            const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${coin.toLowerCase()}usdt@ticker`);
-            ws.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                const priceEl = document.getElementById(`price-${coin}`);
-                const currentPrice = parseFloat(msg.c);
-                priceEl.innerText = `$${currentPrice.toFixed(2)}`;
-                priceEl.className = lastPrices[coin] ? (currentPrice > lastPrices[coin] ? 'price price-up' : 'price price-down') : 'price';
-                lastPrices[coin] = currentPrice;
-            };
-            ws.onclose = () => setTimeout(() => connectIndividualStream(coin), 5000);
-        }
-
-        // New: 1-hour interval check for date rollover
-        function setupAutoRefresh() {
-            setInterval(() => {
-                const savedDate = localStorage.getItem('scan_date');
-                if (savedDate !== getTodayDateString()) {
-                    window.location.reload(); // Refresh the page to trigger new scan
-                }
-            }, 3600000); // 1 hour in milliseconds
-        }
-
-        async function initScanner() {
-            const savedDate = localStorage.getItem('scan_date');
-            const currentDate = getTodayDateString();
-            let savedCoins = JSON.parse(localStorage.getItem('matched_coins')) || [];
-
-            if (savedDate !== currentDate) {
-                localStorage.removeItem('matched_coins');
-                localStorage.setItem('scan_date', currentDate);
-                document.getElementById('status-text').innerText = "New Day Detected. Scanning...";
-                let matches = [];
-                for(let coin of targetCoins) {
-                    if (await checkMomentumSetup(coin)) {
-                        matches.push(coin);
-                        createCoinCard(coin);
-                        if (matches.length >= MAX_COINS) break;
-                    }
-                }
-                localStorage.setItem('matched_coins', JSON.stringify(matches));
-            } else {
-                savedCoins.forEach(createCoinCard);
-            }
-            document.getElementById('status-text').style.display = 'none';
-            setupAutoRefresh();
-        }
-
-        initScanner();
+        // জনসংখ্যা কাউন্টার সিমুলেশন
+        let count = 1476625576;
+        setInterval(() => { count += 1; document.getElementById('pop').innerText = count.toLocaleString(); }, 3000);
+        
+        // নিউজ API (এখানে NewsAPI বা অন্য সার্ভিস ব্যবহার করুন)
+        fetch('https://newsapi.org/v2/top-headlines?country=in&apiKey=YOUR_API_KEY')
+        .then(res => res.json())
+        .then(data => document.getElementById('news').innerText = data.articles[0].title);
     </script>
 </body>
 </html>
