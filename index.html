@@ -1,38 +1,33 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>India Live Dashboard</title>
-    <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        .data { font-size: 20px; font-weight: bold; color: #007bff; }
-    </style>
-</head>
-<body>
-    <h1>Premium Dashboard</h1>
-    
-    <div class="card">
-        <h2>🇮🇳 ভারতের জনসংখ্যা (Live)</h2>
-        <div id="pop" class="data">Loading...</div>
+<div class="card" onclick="alert('বিস্তারিত খবর শীঘ্রই যুক্ত করা হবে')">
+    <h2>🏛️ সরকারি সংবাদ</h2>
+    <div id="news" style="color: #555; margin-top: 10px;">
+        <!-- এখানে খবর লোড হবে -->
+        খবর লোড হচ্ছে...
     </div>
+</div>
 
-    <div class="card" onclick="alert('Details coming soon!')">
-        <h2>🏛️ সরকারি সংবাদ</h2>
-        <div id="news">শিরোনাম লোড হচ্ছে...</div>
-    </div>
+<script>
+    async function fetchNews() {
+        const newsContainer = document.getElementById('news');
+        const API_KEY = 'YOUR_API_KEY'; // এখানে আপনার সঠিক API Key দিন
+        const url = `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${API_KEY}`;
 
-    <script>
-        // জনসংখ্যা কাউন্টার সিমুলেশন
-        let count = 1476625576;
-        setInterval(() => { count += 1; document.getElementById('pop').innerText = count.toLocaleString(); }, 3000);
-        
-        // নিউজ API (এখানে NewsAPI বা অন্য সার্ভিস ব্যবহার করুন)
-        fetch('https://newsapi.org/v2/top-headlines?country=in&apiKey=YOUR_API_KEY')
-        .then(res => res.json())
-        .then(data => document.getElementById('news').innerText = data.articles[0].title);
-    </script>
-</body>
-</html>
+        try {
+            let response = await fetch(url);
+            let data = await response.json();
+            
+            if (data.articles && data.articles.length > 0) {
+                newsContainer.innerText = data.articles[0].title;
+            } else {
+                newsContainer.innerText = "বর্তমানে কোনো নতুন সরকারি সংবাদ পাওয়া যায়নি।";
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            // API কাজ না করলে বা নেটওয়ার্ক সমস্যা থাকলে এই টেক্সট দেখাবে
+            newsContainer.innerText = "সরকারি সংবাদ পোর্টালটি আপডেট করা হচ্ছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।";
+        }
+    }
+
+    // ফাংশনটি কল করুন
+    fetchNews();
+</script>
