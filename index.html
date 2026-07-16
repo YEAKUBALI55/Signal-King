@@ -3,96 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradeSignals Live</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Yeakub Binance Momentum Scanner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); 
+            color: #ffffff; 
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .gradient-border-box {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #00c853, #00e5ff, #a78bfa, #ff3d00);
+            padding: 3px; 
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 200, 83, 0.2);
+            display: flex;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: #0f172a; 
+            border-radius: 21px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 12px;
+        }
+
+        .status-msg {
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            padding: 10px;
+            font-weight: 600;
+        }
+
+        .coin-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 0 20px;
+            height: 16%; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .coin-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .coin-icon {
+            font-size: 26px;
+            color: #00e5ff;
+        }
+
+        .coin-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .coin-pair {
+            font-size: 12px;
+            color: #64748b;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .price-section {
+            text-align: right;
+        }
+
+        .price {
+            font-size: 22px;
+            font-weight: 800;
+            transition: color 0.2s ease;
+        }
+
+        .price-up { color: #00c853; text-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
+        .price-down { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.3); }
+    </style>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen">
+<body>
 
-    <!-- Header -->
-    <header class="p-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">TradeSignals</h1>
-        <div class="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
-            <i class="fas fa-user text-green-400"></i>
+    <div class="gradient-border-box">
+        <div class="container" id="dashboard-container">
+            <div class="status-msg" id="status-text">Checking Saved Setup...</div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Dashboard -->
-    <main class="px-6 pb-24">
-        <!-- Balance Card -->
-        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-3xl border border-gray-700 shadow-2xl mb-8">
-            <p class="text-gray-400 text-sm">Portfolio Balance</p>
-            <h2 class="text-4xl font-bold mt-1">$24,580.00</h2>
-            <div class="mt-4 flex gap-4">
-                <button class="bg-green-500 px-6 py-2 rounded-xl text-black font-semibold hover:bg-green-400 transition">Deposit</button>
-                <button class="bg-gray-700 px-6 py-2 rounded-xl font-semibold hover:bg-gray-600 transition">Withdraw</button>
-            </div>
-        </div>
-
-        <!-- Live Signals Section -->
-        <h3 class="text-xl font-semibold mb-4">Latest Market Signals</h3>
-        <div id="signals-container" class="space-y-4">
-            
-            <!-- Signal Card: BTC (Dynamic Price) -->
-            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
-                        <i class="fas fa-arrow-trend-up"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold">BTC/USDT</h4>
-                        <p class="text-xs text-gray-400">Price: <span id="btc-price" class="text-white">Loading...</span></p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-green-400 font-bold block">BUY</span>
-                    <span class="text-[10px] text-gray-500">Live Feed</span>
-                </div>
-            </div>
-
-            <!-- Signal Card: ETH (Static Example) -->
-            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
-                        <i class="fas fa-arrow-trend-down"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold">ETH/USDT</h4>
-                        <p class="text-xs text-gray-400">Entry: 3,450 | TP: 3,200</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-red-400 font-bold block">SELL</span>
-                    <span class="text-[10px] text-gray-500">45m ago</span>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 w-full bg-gray-900 border-t border-gray-800 p-4 flex justify-around">
-        <i class="fas fa-house text-green-400 text-xl"></i>
-        <i class="fas fa-chart-line text-gray-500 text-xl"></i>
-        <i class="fas fa-bell text-gray-500 text-xl"></i>
-        <i class="fas fa-gear text-gray-500 text-xl"></i>
-    </nav>
-
-    <!-- Live Script -->
     <script>
-        async function fetchLivePrice() {
+        const targetCoins = [
+            'BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','SHIB','AVAX','LINK','LTC','MATIC','UNI','BCH',
+            'FIL','XLM','ATOM','ETC','HBAR','ICP','GRT','AAVE','NEAR','ALGO','QNT','FLOW','EGLD','SAND','MANA',
+            'THETA','EOS','AXS','XTZ','FTM','APE','GALA','MKR','CRV','OP','LDO','APT','ARB','INJ','TIA','SUI'
+        ];
+
+        const MAX_COINS = 5;
+        let lastPrices = {};
+        let sockets = [];
+
+        function getTodayDateString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+        }
+
+        async function checkMomentumSetup(coin) {
             try {
-                const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+                // Fetching 20 days for Support Level calculation
+                const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=20`);
                 const data = await response.json();
-                const price = parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2});
-                document.getElementById('btc-price').innerText = "$" + price;
+
+                if (data && data.length >= 20) {
+                    const yOpen = parseFloat(data[data.length - 2][1]);
+                    const yClose = parseFloat(data[data.length - 2][4]);
+                    const yLow = parseFloat(data[data.length - 2][3]);
+
+                    const tOpen = parseFloat(data[data.length - 1][1]);
+                    const tClose = parseFloat(data[data.length - 1][4]);
+
+                    const isYesterdayGreen = yClose > yOpen;
+                    const isTodayGreen = tClose > tOpen;
+
+                    const yesterdayBodyHeight = yClose - yOpen;
+                    const yesterdayFiftyPercentLevel = yOpen + (yesterdayBodyHeight * 0.5);
+                    const isAboveFiftyPercent = tClose >= yesterdayFiftyPercentLevel;
+
+                    // Support Level Calculation (Lowest Low of last 20 days)
+                    let minLow = parseFloat(data[0][3]);
+                    for(let i = 1; i < 20; i++) {
+                        let currentLow = parseFloat(data[i][3]);
+                        if(currentLow < minLow) minLow = currentLow;
+                    }
+                    
+                    // Support check: Yesterday's low must be near the 20-day minimum (within 2% margin)
+                    const isAtSupport = yLow <= (minLow * 1.02);
+
+                    if (isYesterdayGreen && isTodayGreen && isAboveFiftyPercent && isAtSupport) {
+                        return true; 
+                    }
+                }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error(`Scanner error for ${coin}:`, error);
+            }
+            return false;
+        }
+
+        function createCoinCard(coin) {
+            const container = document.getElementById('dashboard-container');
+            if(document.getElementById(`card-${coin}`)) return;
+
+            const card = document.createElement('div');
+            card.className = 'coin-card';
+            card.id = `card-${coin}`;
+            card.innerHTML = `
+                <div class="coin-info">
+                    <i class="fas fa-bolt coin-icon"></i>
+                    <div>
+                        <span class="coin-name">${coin}</span>
+                        <span class="coin-pair">${coin} / USDT</span>
+                    </div>
+                </div>
+                <div class="price-section">
+                    <div class="price" id="price-${coin}">Connecting...</div>
+                </div>
+            `;
+            container.appendChild(card);
+            connectIndividualStream(coin);
+        }
+
+        function connectIndividualStream(coin) {
+            const coinLower = coin.toLowerCase();
+            const wsUrl = `wss://stream.binance.com:9443/ws/${coinLower}usdt@ticker`;
+            const ws = new WebSocket(wsUrl);
+            sockets.push(ws);
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                const currentPrice = parseFloat(msg.c); 
+                const priceEl = document.getElementById(`price-${coin}`);
+
+                if (priceEl) {
+                    let decimalPlaces = currentPrice < 1 ? 4 : (currentPrice < 10 ? 3 : 2);
+                    let formattedPrice = currentPrice.toLocaleString(undefined, { 
+                        minimumFractionDigits: decimalPlaces,
+                        maximumFractionDigits: decimalPlaces 
+                    });
+
+                    priceEl.innerText = `$${formattedPrice}`;
+
+                    if (lastPrices[coin]) {
+                        if (currentPrice > lastPrices[coin]) {
+                            priceEl.className = 'price price-up';
+                        } else if (currentPrice < lastPrices[coin]) {
+                            priceEl.className = 'price price-down';
+                        }
+                    }
+                    setTimeout(() => { priceEl.className = 'price'; }, 800);
+                    lastPrices[coin] = currentPrice;
+                }
+            };
+            ws.onclose = () => { setTimeout(() => { connectIndividualStream(coin); }, 3000); };
+            ws.onerror = () => { ws.close(); };
+        }
+
+        async function initScanner() {
+            const savedDate = localStorage.getItem('scan_date');
+            const currentDate = getTodayDateString();
+            let savedCoins = JSON.parse(localStorage.getItem('matched_coins')) || [];
+
+            if (savedDate !== currentDate) {
+                localStorage.removeItem('matched_coins');
+                localStorage.setItem('scan_date', currentDate);
+                savedCoins = [];
+            }
+
+            if (savedCoins.length > 0) {
+                document.getElementById('status-text').style.display = 'none';
+                savedCoins.forEach(coin => createCoinCard(coin));
+            } else {
+                document.getElementById('status-text').innerText = "New Date. Scanning setups (Max 5)...";
+                let matchedCount = 0;
+                let temporaryMatches = [];
+
+                for(let coin of targetCoins) {
+                    if (matchedCount >= MAX_COINS) break; 
+
+                    let isMatch = await checkMomentumSetup(coin);
+                    if(isMatch) {
+                        createCoinCard(coin);
+                        temporaryMatches.push(coin);
+                        matchedCount++;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 60)); 
+                }
+
+                if(temporaryMatches.length > 0) {
+                    document.getElementById('status-text').style.display = 'none';
+                } else {
+                    document.getElementById('status-text').innerText = "0 coins found matching setup today.";
+                }
+                localStorage.setItem('matched_coins', JSON.stringify(temporaryMatches));
             }
         }
 
-        // Update price every 5 seconds
-        setInterval(fetchLivePrice, 5000);
-        fetchLivePrice();
+        initScanner();
     </script>
 </body>
 </html>
