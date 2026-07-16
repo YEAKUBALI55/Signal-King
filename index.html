@@ -3,39 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Trading Signals</title>
+    <title>TradeSignals Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white font-sans">
+<body class="bg-gray-900 text-white font-sans min-h-screen">
 
     <!-- Header -->
     <header class="p-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">TradeSignals</h1>
-        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">TradeSignals</h1>
         <div class="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
             <i class="fas fa-user text-green-400"></i>
         </div>
     </header>
 
     <!-- Main Dashboard -->
-    <main class="px-6 pb-20">
+    <main class="px-6 pb-24">
         <!-- Balance Card -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-3xl border border-gray-700 shadow-2xl mb-8">
             <p class="text-gray-400 text-sm">Portfolio Balance</p>
             <h2 class="text-4xl font-bold mt-1">$24,580.00</h2>
             <div class="mt-4 flex gap-4">
-                <button class="bg-green-500 px-6 py-2 rounded-xl text-black font-semibold">Deposit</button>
-                <button class="bg-gray-700 px-6 py-2 rounded-xl font-semibold">Withdraw</button>
+                <button class="bg-green-500 px-6 py-2 rounded-xl text-black font-semibold hover:bg-green-400 transition">Deposit</button>
+                <button class="bg-gray-700 px-6 py-2 rounded-xl font-semibold hover:bg-gray-600 transition">Withdraw</button>
             </div>
         </div>
 
-        <!-- Latest Signals Section -->
-        <h3 class="text-xl font-semibold mb-4">Latest Signals</h3>
-        
-        <div class="space-y-4">
-            <!-- Signal Card 1 -->
+        <!-- Live Signals Section -->
+        <h3 class="text-xl font-semibold mb-4">Latest Market Signals</h3>
+        <div id="signals-container" class="space-y-4">
+            
+            <!-- Signal Card: BTC (Dynamic Price) -->
             <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
@@ -43,16 +41,16 @@
                     </div>
                     <div>
                         <h4 class="font-bold">BTC/USDT</h4>
-                        <p class="text-xs text-gray-400">Entry: 64,200 | TP: 66,500</p>
+                        <p class="text-xs text-gray-400">Price: <span id="btc-price" class="text-white">Loading...</span></p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-green-400 font-bold">BUY</span>
-                    <p class="text-xs text-gray-500">10m ago</p>
+                    <span class="text-green-400 font-bold block">BUY</span>
+                    <span class="text-[10px] text-gray-500">Live Feed</span>
                 </div>
             </div>
 
-            <!-- Signal Card 2 -->
+            <!-- Signal Card: ETH (Static Example) -->
             <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
@@ -64,8 +62,8 @@
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-red-400 font-bold">SELL</span>
-                    <p class="text-xs text-gray-500">45m ago</p>
+                    <span class="text-red-400 font-bold block">SELL</span>
+                    <span class="text-[10px] text-gray-500">45m ago</span>
                 </div>
             </div>
         </div>
@@ -79,5 +77,22 @@
         <i class="fas fa-gear text-gray-500 text-xl"></i>
     </nav>
 
+    <!-- Live Script -->
+    <script>
+        async function fetchLivePrice() {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
+                const data = await response.json();
+                const price = parseFloat(data.price).toLocaleString(undefined, {minimumFractionDigits: 2});
+                document.getElementById('btc-price').innerText = "$" + price;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        // Update price every 5 seconds
+        setInterval(fetchLivePrice, 5000);
+        fetchLivePrice();
+    </script>
 </body>
 </html>
