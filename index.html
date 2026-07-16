@@ -3,80 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yeakub Binance Momentum Scanner</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background: #0f172a; color: #fff; padding: 20px; }
-        .card { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #00c853; }
-        .stats { display: flex; gap: 15px; font-size: 12px; margin-top: 10px; color: #94a3b8; }
-        .buy { color: #22c55e; font-weight: bold; }
-        .wait { color: #eab308; }
-        .invalid { color: #ef4444; }
-    </style>
+    <title>Premium Trading Signals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-900 text-white font-sans">
 
-<div id="dashboard-container"></div>
+    <!-- Header -->
+    <header class="p-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">TradeSignals</h1>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center">
+            <i class="fas fa-user text-green-400"></i>
+        </div>
+    </header>
 
-<script>
-    const targetCoins = ['BTC','ETH','BNB','SOL','XRP']; // আপনার বাকি কয়েনগুলো এখানে দিন
+    <!-- Main Dashboard -->
+    <main class="px-6 pb-20">
+        <!-- Balance Card -->
+        <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-3xl border border-gray-700 shadow-2xl mb-8">
+            <p class="text-gray-400 text-sm">Portfolio Balance</p>
+            <h2 class="text-4xl font-bold mt-1">$24,580.00</h2>
+            <div class="mt-4 flex gap-4">
+                <button class="bg-green-500 px-6 py-2 rounded-xl text-black font-semibold">Deposit</button>
+                <button class="bg-gray-700 px-6 py-2 rounded-xl font-semibold">Withdraw</button>
+            </div>
+        </div>
 
-    async function getCoinData(coin) {
-        // Daily Klines (High, Low, Close, Open, Volume)
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=20`);
-        const data = await res.json();
+        <!-- Latest Signals Section -->
+        <h3 class="text-xl font-semibold mb-4">Latest Signals</h3>
         
-        const y = data[data.length - 2]; // Yesterday
-        const t = data[data.length - 1]; // Today
-        
-        const yHigh = parseFloat(y[2]), yLow = parseFloat(y[3]), yOpen = parseFloat(y[1]), yClose = parseFloat(y[4]), yVol = parseFloat(y[5]);
-        const tClose = parseFloat(t[4]);
-        
-        // --- 📊 Confidence Score ---
-        let score = 0;
-        if (yClose > yOpen) score += 20; // Yesterday Green
-        if (tClose > yOpen) score += 20; // Today Green
-        if (Math.abs(yClose - yOpen) / (yHigh - yLow) > 0.5) score += 20; // Above 50% Body
-        score += 20; // 20-Day Support (Dummy logic)
-        score += 10; // Strong Body
-        score += 10; // High Volume
-        
-        // --- 🚀 Entry Logic ---
-        const entryPrice = yHigh * 1.0015; // 0.15% Breakout
-        let status = "WAIT";
-        if (tClose >= entryPrice) status = "BUY";
-        else if (tClose < yLow * 0.99) status = "INVALID"; // Stop Loss logic
-
-        // --- 🛡️ Risk Management ---
-        const sl = (yLow * 0.99).toFixed(2); // 1% below Low
-        const tp1 = (tClose + (tClose - sl) * 1.5).toFixed(2);
-        const tp2 = (tClose + (tClose - sl) * 2).toFixed(2);
-        const tp3 = (tClose + (tClose - sl) * 3).toFixed(2);
-
-        return { status, sl, tp1, tp2, tp3, score };
-    }
-
-    async function initScanner() {
-        for (let coin of targetCoins) {
-            const data = await getCoinData(coin);
-            const container = document.getElementById('dashboard-container');
-            container.innerHTML += `
-                <div class="card">
-                    <h3>${coin} - <span class="${data.status.toLowerCase()}">${data.status}</span></h3>
-                    <p>Score: ${data.score}/100</p>
-                    <div class="stats">
-                        <span>SL: ${data.sl}</span>
-                        <span>TP1: ${data.tp1}</span>
-                        <span>TP2: ${data.tp2}</span>
-                        <span>TP3: ${data.tp3}</span>
+        <div class="space-y-4">
+            <!-- Signal Card 1 -->
+            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center text-green-500">
+                        <i class="fas fa-arrow-trend-up"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">BTC/USDT</h4>
+                        <p class="text-xs text-gray-400">Entry: 64,200 | TP: 66,500</p>
                     </div>
                 </div>
-            `;
-        }
-    }
+                <div class="text-right">
+                    <span class="text-green-400 font-bold">BUY</span>
+                    <p class="text-xs text-gray-500">10m ago</p>
+                </div>
+            </div>
 
-    initScanner();
-</script>
+            <!-- Signal Card 2 -->
+            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+                        <i class="fas fa-arrow-trend-down"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold">ETH/USDT</h4>
+                        <p class="text-xs text-gray-400">Entry: 3,450 | TP: 3,200</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-red-400 font-bold">SELL</span>
+                    <p class="text-xs text-gray-500">45m ago</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-gray-900 border-t border-gray-800 p-4 flex justify-around">
+        <i class="fas fa-house text-green-400 text-xl"></i>
+        <i class="fas fa-chart-line text-gray-500 text-xl"></i>
+        <i class="fas fa-bell text-gray-500 text-xl"></i>
+        <i class="fas fa-gear text-gray-500 text-xl"></i>
+    </nav>
+
 </body>
 </html>
