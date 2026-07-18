@@ -1,256 +1,1524 @@
-body { 
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); 
-        color: #ffffff; 
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 12px;
-        overflow: hidden;
-    }
+package com.example
 
-    .gradient-border-box {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, #00c853, #00e5ff, #a78bfa, #ff3d00);
-        padding: 3px; 
-        border-radius: 24px;
-        box-shadow: 0 10px 40px rgba(0, 200, 83, 0.2);
-        display: flex;
-    }
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.SignalLog
+import com.example.data.TrackedCoin
+import com.example.ui.ScannerViewModel
+import com.example.ui.TickerData
+import com.example.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.*
 
-    .container {
-        width: 100%;
-        height: 100%;
-        background: #0f172a; 
-        border-radius: 21px;
-        padding: 20px 16px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        gap: 12px;
-    }
+class MainActivity : ComponentActivity() {
+    private val viewModel: ScannerViewModel by viewModels()
 
-    .status-msg {
-        text-align: center;
-        font-size: 14px;
-        color: #64748b;
-        padding: 10px;
-        font-weight: 600;
-    }
-
-    .coin-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 0 20px;
-        height: 16%; 
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.3s ease;
-    }
-
-    .coin-info {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .coin-icon {
-        font-size: 26px;
-        color: #00e5ff;
-    }
-
-    .coin-name {
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-    }
-
-    .coin-pair {
-        font-size: 12px;
-        color: #64748b;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .price-section {
-        text-align: right;
-    }
-
-    .price {
-        font-size: 22px;
-        font-weight: 800;
-        transition: color 0.2s ease;
-    }
-
-    .price-up { color: #00c853; text-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
-    .price-down { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.3); }
-</style>
-<div class="gradient-border-box">
-    <div class="container" id="dashboard-container">
-        <div class="status-msg" id="status-text">Checking Saved Setup...</div>
-    </div>
-</div>
-
-<script>
-    const targetCoins = [
-        'BTC','ETH','BNB','SOL','XRP','ADA','DOT','DOGE','SHIB','AVAX','LINK','LTC','MATIC','UNI','BCH',
-        'FIL','XLM','ATOM','ETC','HBAR','ICP','GRT','AAVE','NEAR','ALGO','QNT','FLOW','EGLD','SAND','MANA',
-        'THETA','EOS','AXS','XTZ','FTM','APE','GALA','MKR','CRV','OP','LDO','APT','ARB','INJ','TIA','SUI'
-    ];
-
-    const MAX_COINS = 5;
-    let lastPrices = {};
-    let sockets = [];
-
-    function getTodayDateString() {
-        const d = new Date();
-        return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-    }
-
-    async function checkMomentumSetup(coin) {
-        try {
-            // Fetching 20 days for Support Level calculation
-            const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1d&limit=20`);
-            const data = await response.json();
-
-            if (data && data.length >= 20) {
-                const yOpen = parseFloat(data[data.length - 2][1]);
-                const yClose = parseFloat(data[data.length - 2][4]);
-                const yLow = parseFloat(data[data.length - 2][3]);
-
-                const tOpen = parseFloat(data[data.length - 1][1]);
-                const tClose = parseFloat(data[data.length - 1][4]);
-
-                const isYesterdayGreen = yClose > yOpen;
-                const isTodayGreen = tClose > tOpen;
-
-                const yesterdayBodyHeight = yClose - yOpen;
-                const yesterdayFiftyPercentLevel = yOpen + (yesterdayBodyHeight * 0.5);
-                const isAboveFiftyPercent = tClose >= yesterdayFiftyPercentLevel;
-
-                // Support Level Calculation (Lowest Low of last 20 days)
-                let minLow = parseFloat(data[0][3]);
-                for(let i = 1; i < 20; i++) {
-                    let currentLow = parseFloat(data[i][3]);
-                    if(currentLow < minLow) minLow = currentLow;
-                }
-                
-                // Support check: Yesterday's low must be near the 20-day minimum (within 2% margin)
-                const isAtSupport = yLow <= (minLow * 1.02);
-
-                if (isYesterdayGreen && isTodayGreen && isAboveFiftyPercent && isAtSupport) {
-                    return true; 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MyApplicationTheme {
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("main_scaffold")
+                ) { innerPadding ->
+                    ScannerScreen(
+                        viewModel = viewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
-        } catch (error) {
-            console.error(`Scanner error for ${coin}:`, error);
         }
-        return false;
+    }
+}
+
+@Composable
+fun ScannerScreen(
+    viewModel: ScannerViewModel,
+    modifier: Modifier = Modifier
+) {
+    val trackedCoins by viewModel.trackedCoins.collectAsState()
+    val signalLogs by viewModel.signalLogs.collectAsState()
+    val livePrices by viewModel.livePrices.collectAsState()
+    val openPrices by viewModel.openPrices.collectAsState()
+    val topTickers by viewModel.topTickers.collectAsState()
+    val wsConnected by viewModel.wsConnected.collectAsState()
+    val isSimulationMode by viewModel.isSimulationMode.collectAsState()
+    val maxSlots by viewModel.maxSlots.collectAsState()
+
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    // Trigger clipboard toast alerts
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            toastMessage = null
+        }
     }
 
-    function createCoinCard(coin) {
-        const container = document.getElementById('dashboard-container');
-        if(document.getElementById(`card-${coin}`)) return;
+    // Gradient background brushing
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        CyberNavyBg,
+                        Color(0xFF070B13)
+                    )
+                )
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            
+            // 1. GLOBAL STATUS & APP HEADER
+            AppHeaderSection(
+                wsConnected = wsConnected,
+                isSimulationMode = isSimulationMode,
+                activeSlots = trackedCoins.size,
+                maxSlots = maxSlots,
+                onToggleSimulation = { viewModel.toggleSimulationMode(it) },
+                onClearAll = { viewModel.clearAllSlots() }
+            )
 
-        const card = document.createElement('div');
-        card.className = 'coin-card';
-        card.id = `card-${coin}`;
-        card.innerHTML = `
-            <div class="coin-info">
-                <i class="fas fa-bolt coin-icon"></i>
-                <div>
-                    <span class="coin-name">${coin}</span>
-                    <span class="coin-pair">${coin} / USDT</span>
-                </div>
-            </div>
-            <div class="price-section">
-                <div class="price" id="price-${coin}">Connecting...</div>
-            </div>
-        `;
-        container.appendChild(card);
-        connectIndividualStream(coin);
-    }
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                contentPadding = PaddingValues(bottom = 80.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // 2. LIVE TICKERS ARRAY STREAM ROW
+                item {
+                    LiveTickersSection(topTickers = topTickers)
+                }
 
-    function connectIndividualStream(coin) {
-        const coinLower = coin.toLowerCase();
-        const wsUrl = `wss://stream.binance.com:9443/ws/${coinLower}usdt@ticker`;
-        const ws = new WebSocket(wsUrl);
-        sockets.push(ws);
+                // 3. SIGNAL DEPLOYMENT CONTROLS
+                item {
+                    DeploySignalSection(
+                        livePrices = livePrices,
+                        onDeploySignal = { symbol, direction, base, entry, t1, t2, sl ->
+                            viewModel.addCustomSignal(symbol, direction, base, entry, t1, t2, sl)
+                        }
+                    )
+                }
 
-        ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            const currentPrice = parseFloat(msg.c); 
-            const priceEl = document.getElementById(`price-${coin}`);
-
-            if (priceEl) {
-                let decimalPlaces = currentPrice < 1 ? 4 : (currentPrice < 10 ? 3 : 2);
-                let formattedPrice = currentPrice.toLocaleString(undefined, { 
-                    minimumFractionDigits: decimalPlaces,
-                    maximumFractionDigits: decimalPlaces 
-                });
-
-                priceEl.innerText = `$${formattedPrice}`;
-
-                if (lastPrices[coin]) {
-                    if (currentPrice > lastPrices[coin]) {
-                        priceEl.className = 'price price-up';
-                    } else if (currentPrice < lastPrices[coin]) {
-                        priceEl.className = 'price price-down';
+                // 4. ACTIVE SCANNING SLOTS TITLE
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Radar,
+                                contentDescription = null,
+                                tint = CyberEmerald,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Active Array Slots",
+                                color = TextPrimary,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = "${trackedCoins.size} / $maxSlots Active",
+                            color = CyberEmerald,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .background(CyberNavySurfaceVariant, RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
                     }
                 }
-                setTimeout(() => { priceEl.className = 'price'; }, 800);
-                lastPrices[coin] = currentPrice;
-            }
-        };
-        ws.onclose = () => { setTimeout(() => { connectIndividualStream(coin); }, 3000); };
-        ws.onerror = () => { ws.close(); };
-    }
 
-    async function initScanner() {
-        const savedDate = localStorage.getItem('scan_date');
-        const currentDate = getTodayDateString();
-        let savedCoins = JSON.parse(localStorage.getItem('matched_coins')) || [];
-
-        if (savedDate !== currentDate) {
-            localStorage.removeItem('matched_coins');
-            localStorage.setItem('scan_date', currentDate);
-            savedCoins = [];
-        }
-
-        if (savedCoins.length > 0) {
-            document.getElementById('status-text').style.display = 'none';
-            savedCoins.forEach(coin => createCoinCard(coin));
-        } else {
-            document.getElementById('status-text').innerText = "New Date. Scanning setups (Max 5)...";
-            let matchedCount = 0;
-            let temporaryMatches = [];
-
-            for(let coin of targetCoins) {
-                if (matchedCount >= MAX_COINS) break; 
-
-                let isMatch = await checkMomentumSetup(coin);
-                if(isMatch) {
-                    createCoinCard(coin);
-                    temporaryMatches.push(coin);
-                    matchedCount++;
+                // Empty State if no active slots
+                if (trackedCoins.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp, horizontal = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Inbox,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "No Active Signals Scanning",
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Deploy a custom signal above or wait for live stream percent-changes (>2.5%) to auto-initialize a slot.",
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                        }
+                    }
                 }
-                await new Promise(resolve => setTimeout(resolve, 60)); 
+
+                // 5. DETAILED TRACKED CARDS
+                items(trackedCoins, key = { it.coin }) { coin ->
+                    val livePrice = livePrices[coin.coin] ?: coin.lastEntryBasePrice
+                    val openPrice = openPrices[coin.coin] ?: coin.lastEntryBasePrice
+                    val change = if (openPrice > 0.0) ((livePrice - openPrice) / openPrice) * 100.0 else 0.0
+
+                    TrackedCoinCard(
+                        coin = coin,
+                        currentPrice = livePrice,
+                        percentChange = change,
+                        onManualExit = { viewModel.manualExitTrade(coin.coin) },
+                        onCloseSlot = { viewModel.forceCloseSlot(coin.coin) },
+                        onSimulatePrice = { targetPrice -> viewModel.simulatePriceUpdate(coin.coin, targetPrice) },
+                        onLevelsChanged = { entry, t1, t2, sl ->
+                            viewModel.modifyTrackedLevels(coin.coin, entry, t1, t2, sl)
+                        },
+                        onCopyValue = { label, value ->
+                            clipboardManager.setText(AnnotatedString(value))
+                            toastMessage = "$label ($value) copied to clipboard!"
+                        }
+                    )
+                }
+
+                // 6. REAL-TIME EVENT LOGS
+                item {
+                    ActivityLogSection(
+                        logs = signalLogs,
+                        onClearLogs = { viewModel.clearHistory() }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppHeaderSection(
+    wsConnected: Boolean,
+    isSimulationMode: Boolean,
+    activeSlots: Int,
+    maxSlots: Int,
+    onToggleSimulation: (Boolean) -> Unit,
+    onClearAll: () -> Unit
+) {
+    // Pulse animation for live stream dot
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val dotAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotAlpha"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp),
+        colors = CardDefaults.cardColors(containerColor = CyberNavySurface),
+        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 40.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "QUANTUM SCAN PRO",
+                        color = CyberEmerald,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 1.sp
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (wsConnected) CyberEmerald.copy(alpha = dotAlpha)
+                                    else if (isSimulationMode) CyberGold.copy(alpha = dotAlpha)
+                                    else Color.Red
+                                )
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isSimulationMode) "SIMULATION MODE ACTIVE"
+                                   else if (wsConnected) "BINANCE LIVE STREAM ON"
+                                   else "STREAM DISCONNECTED",
+                            color = if (isSimulationMode) CyberGold else if (wsConnected) TextSecondary else Color.Red,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = onClearAll,
+                    modifier = Modifier.testTag("clear_all_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Reset Slots",
+                        tint = TextSecondary
+                    )
+                }
             }
 
-            if(temporaryMatches.length > 0) {
-                document.getElementById('status-text').style.display = 'none';
-            } else {
-                document.getElementById('status-text').innerText = "0 coins found matching setup today.";
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Control Bar for Live Mode vs Simulation Mode
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CyberNavySurfaceVariant)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = if (isSimulationMode) Icons.Default.Construction else Icons.Default.Wifi,
+                        contentDescription = null,
+                        tint = if (isSimulationMode) CyberGold else CyberEmerald,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = if (isSimulationMode) "Manual Sandbox" else "WebSocket Live Stream",
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isSimulationMode) "Manipulate prices to test triggers" else "Tracking actual Binance prices",
+                            color = TextSecondary,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Sandbox",
+                        color = if (isSimulationMode) CyberGold else TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(end = 6.dp)
+                    )
+                    Switch(
+                        checked = isSimulationMode,
+                        onCheckedChange = onToggleSimulation,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = CyberGold,
+                            checkedTrackColor = CyberGold.copy(alpha = 0.4f),
+                            uncheckedThumbColor = TextSecondary,
+                            uncheckedTrackColor = CyberNavySurface
+                        ),
+                        modifier = Modifier
+                            .scale(0.8f)
+                            .testTag("simulation_switch")
+                    )
+                }
             }
-            localStorage.setItem('matched_coins', JSON.stringify(temporaryMatches));
+        }
+    }
+}
+
+@Composable
+fun LiveTickersSection(topTickers: List<TickerData>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = "LIVE TICKER ARRAY STREAM (TOP VOLATILITY)",
+            color = TextSecondary,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
+            fontFamily = FontFamily.Monospace
+        )
+
+        if (topTickers.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .padding(horizontal = 16.dp)
+                    .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+                    .background(CyberNavySurface),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Awaiting first stream data frame...",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+        } else {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(topTickers) { ticker ->
+                    val isUp = ticker.percentChange >= 0
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(CyberNavySurface)
+                            .border(1.dp, if (isUp) CyberEmerald.copy(alpha = 0.3f) else CyberRed.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = ticker.coin,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$${formatPrice(ticker.price)}",
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (isUp) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = if (isUp) CyberEmerald else CyberRed,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = String.format(Locale.US, "%.2f%%", ticker.percentChange),
+                                color = if (isUp) CyberEmerald else CyberRed,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DeploySignalSection(
+    livePrices: Map<String, Double>,
+    onDeploySignal: (String, String, Double, Double, Double, Double, Double) -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+    var coinSymbol by remember { mutableStateOf("") }
+    var direction by remember { mutableStateOf("LONG") } // LONG or SHORT
+    var customBasePrice by remember { mutableStateOf("") }
+
+    // Manual input fields
+    var customEntry by remember { mutableStateOf("") }
+    var customT1 by remember { mutableStateOf("") }
+    var customT2 by remember { mutableStateOf("") }
+    var customSL by remember { mutableStateOf("") }
+
+    // Calculate dynamic defaults when coinSymbol or customBasePrice changes
+    val basePriceCalculated = remember(coinSymbol, customBasePrice, livePrices) {
+        val parsedManual = customBasePrice.toDoubleOrNull()
+        if (parsedManual != null) {
+            parsedManual
+        } else {
+            val symbolUpper = coinSymbol.uppercase().trim().replace("USDT", "")
+            livePrices[symbolUpper] ?: 100.0 // fallback
         }
     }
 
-    initScanner();
-</script>
+    // Auto calculate levels based on base price & direction
+    val autoEntry = remember(basePriceCalculated, direction) {
+        if (direction == "LONG") basePriceCalculated * 0.9985 else basePriceCalculated * 1.0015
+    }
+    val autoT1 = remember(basePriceCalculated, direction) {
+        if (direction == "LONG") basePriceCalculated * 1.0060 else basePriceCalculated * 0.9940
+    }
+    val autoT2 = remember(basePriceCalculated, direction) {
+        if (direction == "LONG") basePriceCalculated * 1.0140 else basePriceCalculated * 0.9860
+    }
+    val autoSL = remember(basePriceCalculated, direction) {
+        if (direction == "LONG") basePriceCalculated * 0.9920 else basePriceCalculated * 1.0080
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = CyberNavySurface),
+        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded }
+                    .testTag("expand_deploy_panel"),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = null,
+                        tint = CyberEmerald,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Deploy Quantum Signal",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            text = "Add manual target controls for any coin",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = TextSecondary
+                )
+            }
+
+            AnimatedVisibility(visible = isExpanded) {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    // Symbol input
+                    OutlinedTextField(
+                        value = coinSymbol,
+                        onValueChange = { coinSymbol = it },
+                        label = { Text("Coin Symbol (e.g., BTC, ETH, SOL)", color = TextSecondary) },
+                        placeholder = { Text("BTC", color = TextSecondary.copy(alpha = 0.5f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberEmerald,
+                            unfocusedBorderColor = BorderColor,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("coin_symbol_input"),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Direction Row (LONG / SHORT)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { direction = "LONG" },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("direction_long_button"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (direction == "LONG") CyberEmerald else CyberNavySurfaceVariant
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = null,
+                                tint = if (direction == "LONG") Color.Black else TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "LONG",
+                                color = if (direction == "LONG") Color.Black else TextSecondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Button(
+                            onClick = { direction = "SHORT" },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("direction_short_button"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (direction == "SHORT") CyberRed else CyberNavySurfaceVariant
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = if (direction == "SHORT") Color.White else TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "SHORT",
+                                color = if (direction == "SHORT") Color.White else TextSecondary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Base price input
+                    OutlinedTextField(
+                        value = customBasePrice,
+                        onValueChange = { customBasePrice = it },
+                        label = { Text("Base Market Price ($)", color = TextSecondary) },
+                        placeholder = { Text(String.format(Locale.US, "%.2f", basePriceCalculated), color = TextSecondary.copy(alpha = 0.5f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberEmerald,
+                            unfocusedBorderColor = BorderColor,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("base_price_input"),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Custom levels accordion or directly visible override textfields for high-quality engineering!
+                    Text(
+                        text = "CUSTOMIZE TARGET LEVELS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = customEntry,
+                            onValueChange = { customEntry = it },
+                            label = { Text("Entry", fontSize = 11.sp, color = TextSecondary) },
+                            placeholder = { Text(String.format(Locale.US, "%.3f", autoEntry), color = TextSecondary.copy(alpha = 0.5f)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberEmerald,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("entry_input"),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        OutlinedTextField(
+                            value = customSL,
+                            onValueChange = { customSL = it },
+                            label = { Text("Stop Loss", fontSize = 11.sp, color = TextSecondary) },
+                            placeholder = { Text(String.format(Locale.US, "%.3f", autoSL), color = TextSecondary.copy(alpha = 0.5f)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberEmerald,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("sl_input"),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = customT1,
+                            onValueChange = { customT1 = it },
+                            label = { Text("Exit Target 1", fontSize = 11.sp, color = TextSecondary) },
+                            placeholder = { Text(String.format(Locale.US, "%.3f", autoT1), color = TextSecondary.copy(alpha = 0.5f)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberEmerald,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("t1_input"),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        OutlinedTextField(
+                            value = customT2,
+                            onValueChange = { customT2 = it },
+                            label = { Text("Exit Target 2", fontSize = 11.sp, color = TextSecondary) },
+                            placeholder = { Text(String.format(Locale.US, "%.3f", autoT2), color = TextSecondary.copy(alpha = 0.5f)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberEmerald,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("t2_input"),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Deploy Button
+                    Button(
+                        onClick = {
+                            val symbol = coinSymbol.uppercase().trim().replace("USDT", "")
+                            if (symbol.isNotEmpty()) {
+                                val entry = customEntry.toDoubleOrNull() ?: autoEntry
+                                val t1 = customT1.toDoubleOrNull() ?: autoT1
+                                val t2 = customT2.toDoubleOrNull() ?: autoT2
+                                val sl = customSL.toDoubleOrNull() ?: autoSL
+
+                                onDeploySignal(symbol, direction, basePriceCalculated, entry, t1, t2, sl)
+
+                                // Reset form inputs
+                                coinSymbol = ""
+                                customBasePrice = ""
+                                customEntry = ""
+                                customT1 = ""
+                                customT2 = ""
+                                customSL = ""
+                                isExpanded = false
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = CyberEmerald
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("deploy_signal_button"),
+                        enabled = coinSymbol.isNotEmpty()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FlashOn,
+                            contentDescription = null,
+                            tint = Color.Black
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "DEPLOY QUANTUM SCAN SLOT",
+                            color = Color.Black,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrackedCoinCard(
+    coin: TrackedCoin,
+    currentPrice: Double,
+    percentChange: Double,
+    onManualExit: () -> Unit,
+    onCloseSlot: () -> Unit,
+    onSimulatePrice: (Double) -> Unit,
+    onLevelsChanged: (Double, Double, Double, Double) -> Unit,
+    onCopyValue: (String, String) -> Unit
+) {
+    var isEditingLevels by remember { mutableStateOf(false) }
+
+    var entryInput by remember(coin) { mutableStateOf(coin.entryVal.toString()) }
+    var t1Input by remember(coin) { mutableStateOf(coin.t1Val.toString()) }
+    var t2Input by remember(coin) { mutableStateOf(coin.t2Val.toString()) }
+    var slInput by remember(coin) { mutableStateOf(coin.slVal.toString()) }
+
+    val isLong = coin.direction == "LONG"
+
+    // Decimals formatter
+    val decimals = remember(currentPrice) {
+        if (currentPrice < 1.0) 5 else 2
+    }
+
+    // Border and background highlighting based on tracking state
+    val (cardBorder, cardBg) = remember(coin.currentTrackState) {
+        when (coin.currentTrackState) {
+            "active_in_trade" -> BorderStroke(2.dp, CyberGold) to Color(0xFF1E1F1A)
+            "target_hit" -> BorderStroke(2.dp, CyberEmerald) to Color(0xFF131C16)
+            "sl_hit" -> BorderStroke(2.dp, CyberRed) to Color(0xFF1F1212)
+            else -> BorderStroke(1.dp, BorderColor) to CyberNavySurface
+        }
+    }
+
+    // Pulsing highlight modifier for entry/target hits
+    val infiniteTransition = rememberInfiniteTransition(label = "box_pulse")
+    val hitHighlightAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = EaseInOutQuad),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "box_alpha"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .testTag("tracked_card_${coin.coin}"),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = cardBorder,
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            
+            // Card Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${coin.coin}/USDT",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 18.sp,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = coin.lastSignal,
+                            color = if (isLong) CyberEmerald else CyberRed,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier
+                                .border(
+                                    1.dp,
+                                    if (isLong) CyberEmerald else CyberRed,
+                                    RoundedCornerShape(6.dp)
+                                )
+                                .background(
+                                    if (isLong) CyberEmerald.copy(alpha = 0.08f) else CyberRed.copy(
+                                        alpha = 0.08f
+                                    ), RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    if (coin.isCustom) {
+                        Text(
+                            text = "Custom User Deploy",
+                            color = CyberBlue,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Alert Badge Status
+                val badgeColors = when (coin.currentTrackState) {
+                    "active_in_trade" -> ButtonDefaults.buttonColors(containerColor = CyberGold, contentColor = Color.Black)
+                    "target_hit" -> ButtonDefaults.buttonColors(containerColor = CyberEmerald, contentColor = Color.Black)
+                    "sl_hit" -> ButtonDefaults.buttonColors(containerColor = CyberRed, contentColor = Color.White)
+                    else -> ButtonDefaults.buttonColors(containerColor = DarkAccent, contentColor = TextPrimary)
+                }
+
+                val statusBadgeLabel = when (coin.currentTrackState) {
+                    "active_in_trade" -> "ENTRY HIT"
+                    "target_hit" -> "TARGET HIT ðŸŽ‰"
+                    "sl_hit" -> "SL HIT âŒ"
+                    else -> "AWAITING ENTRY"
+                }
+
+                Text(
+                    text = statusBadgeLabel,
+                    color = badgeColors.contentColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .background(badgeColors.containerColor, RoundedCornerShape(6.dp))
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // LIVE PRICE CONTAINER
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(CyberNavySurfaceVariant)
+                    .border(1.dp, BorderColor, RoundedCornerShape(12.dp))
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Live Price Tracking",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "$${String.format(Locale.US, "%.${decimals}f", currentPrice)}",
+                        color = CyberEmerald,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Black,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.testTag("live_price_${coin.coin}")
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "24h Shift",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                    val sign = if (percentChange >= 0) "+" else ""
+                    Text(
+                        text = "$sign${String.format(Locale.US, "%.2f%%", percentChange)}",
+                        color = if (percentChange >= 0) CyberEmerald else CyberRed,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // FOUR-LEVEL TARGET GRID (Interactive Copy & Hit Statuses)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Optimum Entry
+                val isEntryHit = coin.currentTrackState == "active_in_trade" || coin.currentTrackState == "target_hit" || coin.currentTrackState == "sl_hit"
+                val entryBoxBg = if (isEntryHit) CyberEmerald.copy(alpha = if (coin.currentTrackState == "active_in_trade") hitHighlightAlpha else 0.8f) else CyberNavySurfaceVariant
+                LevelBox(
+                    label = "Optimum Entry",
+                    value = String.format(Locale.US, "%.${decimals}f", coin.entryVal),
+                    percentLabel = "TRIGGER",
+                    bg = entryBoxBg,
+                    contentColor = if (isEntryHit) Color.Black else TextPrimary,
+                    modifier = Modifier.weight(1f).clickable {
+                        onCopyValue("Optimal Entry Price", String.format(Locale.US, "%.${decimals}f", coin.entryVal))
+                    }
+                )
+
+                // Target 1
+                val isT1Hit = coin.currentTrackState == "target_hit"
+                val t1BoxBg = if (isT1Hit) CyberBlue.copy(alpha = hitHighlightAlpha) else CyberBlue.copy(alpha = 0.15f)
+                val t1Pct = ((coin.t1Val - coin.entryVal) / coin.entryVal) * 100.0
+                val formattedT1Pct = String.format(Locale.US, "%s%.1f%%", if (isLong) "+" else "-", Math.abs(t1Pct))
+                LevelBox(
+                    label = "Exit T1",
+                    value = String.format(Locale.US, "%.${decimals}f", coin.t1Val),
+                    percentLabel = formattedT1Pct,
+                    bg = t1BoxBg,
+                    contentColor = if (isT1Hit) Color.White else CyberBlue,
+                    modifier = Modifier.weight(1f).clickable {
+                        onCopyValue("T1 Exit Price", String.format(Locale.US, "%.${decimals}f", coin.t1Val))
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Target 2
+                val isT2Hit = coin.currentTrackState == "target_hit"
+                val t2BoxBg = if (isT2Hit) CyberBlue.copy(alpha = hitHighlightAlpha) else CyberBlue.copy(alpha = 0.10f)
+                val t2Pct = ((coin.t2Val - coin.entryVal) / coin.entryVal) * 100.0
+                val formattedT2Pct = String.format(Locale.US, "%s%.1f%%", if (isLong) "+" else "-", Math.abs(t2Pct))
+                LevelBox(
+                    label = "Exit T2",
+                    value = String.format(Locale.US, "%.${decimals}f", coin.t2Val),
+                    percentLabel = formattedT2Pct,
+                    bg = t2BoxBg,
+                    contentColor = if (isT2Hit) Color.White else CyberBlue.copy(alpha = 0.8f),
+                    modifier = Modifier.weight(1f).clickable {
+                        onCopyValue("T2 Exit Price", String.format(Locale.US, "%.${decimals}f", coin.t2Val))
+                    }
+                )
+
+                // Stop Loss
+                val isSLHit = coin.currentTrackState == "sl_hit"
+                val slBoxBg = if (isSLHit) CyberRed.copy(alpha = hitHighlightAlpha) else CyberRed.copy(alpha = 0.12f)
+                val slPct = ((coin.slVal - coin.entryVal) / coin.entryVal) * 100.0
+                val formattedSLPct = String.format(Locale.US, "%.1f%%", slPct)
+                LevelBox(
+                    label = "Stop Loss (SL)",
+                    value = String.format(Locale.US, "%.${decimals}f", coin.slVal),
+                    percentLabel = formattedSLPct,
+                    bg = slBoxBg,
+                    contentColor = if (isSLHit) Color.White else CyberRed,
+                    modifier = Modifier.weight(1f).clickable {
+                        onCopyValue("Stop Loss Price", String.format(Locale.US, "%.${decimals}f", coin.slVal))
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // INFO BULLEYE STATUS BAR
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF0369A1).copy(alpha = 0.08f))
+                    .border(1.dp, Color(0xFF0369A1).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    tint = Color(0xFF0284C7),
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = coin.statusText,
+                    color = Color(0xFF0284C7),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // INTERACTIVE ACTION BUTTON CONTROLS
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Side: Customize Levels / Toggle Manual Price Slider
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(
+                        onClick = { isEditingLevels = !isEditingLevels },
+                        modifier = Modifier
+                            .background(CyberNavySurfaceVariant, CircleShape)
+                            .size(36.dp)
+                            .testTag("edit_levels_button_${coin.coin}")
+                    ) {
+                        Icon(
+                            imageVector = if (isEditingLevels) Icons.Default.Close else Icons.Default.Edit,
+                            contentDescription = "Edit Levels",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    if (coin.currentTrackState == "active_in_trade") {
+                        Button(
+                            onClick = onManualExit,
+                            colors = ButtonDefaults.buttonColors(containerColor = CyberRed),
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                            modifier = Modifier
+                                .height(36.dp)
+                                .testTag("manual_exit_${coin.coin}"),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "EXIT TRADE NOW",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+
+                // Delete Slot / Close Card Button
+                Button(
+                    onClick = onCloseSlot,
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkAccent),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .testTag("delete_slot_${coin.coin}"),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Slot",
+                        tint = CyberRed,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Close Slot",
+                        color = TextPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Expanded Level Editing Panel
+            AnimatedVisibility(visible = isEditingLevels) {
+                Column(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CyberNavySurfaceVariant)
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "MANUALLY OVERRIDE SIGNAL LEVELS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CyberGold,
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        fontFamily = FontFamily.Monospace
+                    )
+
+                    OutlinedTextField(
+                        value = entryInput,
+                        onValueChange = { entryInput = it },
+                        label = { Text("Entry Level Price ($)", fontSize = 11.sp, color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberGold,
+                            unfocusedBorderColor = BorderColor,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = t1Input,
+                            onValueChange = { t1Input = it },
+                            label = { Text("T1 Exit Price ($)", fontSize = 11.sp, color = TextSecondary) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberGold,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        OutlinedTextField(
+                            value = t2Input,
+                            onValueChange = { t2Input = it },
+                            label = { Text("T2 Exit Price ($)", fontSize = 11.sp, color = TextSecondary) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CyberGold,
+                                unfocusedBorderColor = BorderColor,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary
+                            ),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = slInput,
+                        onValueChange = { slInput = it },
+                        label = { Text("Stop Loss Level ($)", fontSize = 11.sp, color = TextSecondary) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = CyberGold,
+                            unfocusedBorderColor = BorderColor,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            val entry = entryInput.toDoubleOrNull() ?: coin.entryVal
+                            val t1 = t1Input.toDoubleOrNull() ?: coin.t1Val
+                            val t2 = t2Input.toDoubleOrNull() ?: coin.t2Val
+                            val sl = slInput.toDoubleOrNull() ?: coin.slVal
+
+                            onLevelsChanged(entry, t1, t2, sl)
+                            isEditingLevels = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = CyberGold),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "APPLY NEW SCAN VALUES",
+                            color = Color.Black,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+
+            // SANDBOX CONTROLS PANEL
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = BorderColor, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Column {
+                Text(
+                    text = "SANDBOX SIMULATION ALGORITHMS",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    fontFamily = FontFamily.Monospace
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Button(
+                        onClick = { onSimulatePrice(coin.entryVal) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkAccent),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text("Trigger Entry", fontSize = 10.sp, color = CyberGold, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = { onSimulatePrice(coin.t1Val) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkAccent),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text("Trigger T1 (Exit)", fontSize = 10.sp, color = CyberEmerald, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = { onSimulatePrice(coin.slVal) },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkAccent),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text("Trigger SL", fontSize = 10.sp, color = CyberRed, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LevelBox(
+    label: String,
+    value: String,
+    percentLabel: String,
+    bg: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg)
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label.uppercase(),
+                color = if (bg == CyberNavySurfaceVariant) TextSecondary else contentColor.copy(alpha = 0.8f),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = percentLabel,
+                color = contentColor,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .background(contentColor.copy(alpha = 0.12f), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 3.dp, vertical = 1.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            color = contentColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Black,
+            fontFamily = FontFamily.Monospace
+        )
+    }
+}
+
+@Composable
+fun ActivityLogSection(
+    logs: List<SignalLog>,
+    onClearLogs: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = CyberNavySurface),
+        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = CyberEmerald,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Quantum Event Log",
+                        color = TextPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                IconButton(
+                    onClick = onClearLogs,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteSweep,
+                        contentDescription = "Clear Logs",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (logs.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Logs clear. Systems tracking live ticks.",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    logs.forEach { log ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(CyberNavySurfaceVariant)
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val iconInfo = when (log.type) {
+                                "SIGNAL" -> Icons.Default.FlashOn to CyberGold
+                                "ENTRY_HIT" -> Icons.Default.Lock to CyberGold
+                                "EXIT_TARGET" -> Icons.Default.CheckCircle to CyberEmerald
+                                "EXIT_STOP_LOSS" -> Icons.Default.Warning to CyberRed
+                                "MANUAL_EXIT" -> Icons.Default.ExitToApp to CyberRed
+                                else -> Icons.Default.Info to CyberBlue
+                            }
+
+                            Icon(
+                                imageVector = iconInfo.first,
+                                contentDescription = null,
+                                tint = iconInfo.second,
+                                modifier = Modifier.size(16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = log.message,
+                                    color = TextPrimary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 14.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = formatTime(log.timestamp),
+                                    color = TextSecondary,
+                                    fontSize = 9.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Helper formatting functions
+fun formatTime(timestamp: Long): String {
+    val sdf = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    return sdf.format(Date(timestamp))
+}
+
+fun formatPrice(price: Double): String {
+    return if (price < 1.0) String.format(Locale.US, "%.5f", price)
+    else String.format(Locale.US, "%.2f", price)
+}
+
