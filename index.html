@@ -1,3 +1,96 @@
+body { 
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #111827 100%); 
+        color: #ffffff; 
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 12px;
+        overflow: hidden;
+    }
+
+    .gradient-border-box {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #00c853, #00e5ff, #a78bfa, #ff3d00);
+        padding: 3px; 
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 200, 83, 0.2);
+        display: flex;
+    }
+
+    .container {
+        width: 100%;
+        height: 100%;
+        background: #0f172a; 
+        border-radius: 21px;
+        padding: 20px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .status-msg {
+        text-align: center;
+        font-size: 14px;
+        color: #64748b;
+        padding: 10px;
+        font-weight: 600;
+    }
+
+    .coin-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 0 20px;
+        height: 16%; 
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+
+    .coin-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .coin-icon {
+        font-size: 26px;
+        color: #00e5ff;
+    }
+
+    .coin-name {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .coin-pair {
+        font-size: 12px;
+        color: #64748b;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .price-section {
+        text-align: right;
+    }
+
+    .price {
+        font-size: 22px;
+        font-weight: 800;
+        transition: color 0.2s ease;
+    }
+
+    .price-up { color: #00c853; text-shadow: 0 0 10px rgba(0, 200, 83, 0.3); }
+    .price-down { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.3); }
+</style>
 <div class="gradient-border-box">
     <div class="container" id="dashboard-container">
         <div class="status-msg" id="status-text">Checking Saved Setup...</div>
